@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="WM00Av" name="OpenGLES2Examples" projectType="guiapp" version="1.0.0"
+              bundleIdentifier="com.gregkellum.OpenGLES2Examples" jucerVersion="3.0.0">
+  <MAINGROUP id="TU1fIy" name="OpenGLES2Examples">
+    <GROUP id="{5D336439-7B37-10CD-D599-7C97A2BDD999}" name="Source">
+      <GROUP id="{30E60D7D-1129-BD53-B537-8BABFA292BFB}" name="main">
+        <FILE id="JJah44" name="ApplicationMode.h" compile="0" resource="0"
+              file="Source/main/ApplicationMode.h"/>
+        <FILE id="i9dhBA" name="iOSContentComponent.cpp" compile="1" resource="0"
+              file="Source/main/iOSContentComponent.cpp"/>
+        <FILE id="POmTQR" name="iOSContentComponent.h" compile="0" resource="0"
+              file="Source/main/iOSContentComponent.h"/>
+        <FILE id="EOlMMY" name="iOSMainWindow.cpp" compile="1" resource="0"
+              file="Source/main/iOSMainWindow.cpp"/>
+        <FILE id="V9DzJX" name="iOSMainWindow.h" compile="0" resource="0" file="Source/main/iOSMainWindow.h"/>
+        <FILE id="R9Xdsf" name="iOSModeSelectorToolbar.cpp" compile="1" resource="0"
+              file="Source/main/iOSModeSelectorToolbar.cpp"/>
+        <FILE id="kNVtt9" name="iOSModeSelectorToolbar.h" compile="0" resource="0"
+              file="Source/main/iOSModeSelectorToolbar.h"/>
+        <FILE id="hJK4Kj" name="Main.cpp" compile="1" resource="0" file="Source/main/Main.cpp"/>
+        <FILE id="tFpxeH" name="ResourceManager.cpp" compile="1" resource="0"
+              file="Source/main/ResourceManager.cpp"/>
+        <FILE id="f0SRRd" name="ResourceManager.h" compile="0" resource="0"
+              file="Source/main/ResourceManager.h"/>
+      </GROUP>
+      <GROUP id="{BA3A3050-F793-67F7-958B-0E35BE7FE325}" name="openGL">
+        <FILE id="WWzFOD" name="SquareComponent.cpp" compile="1" resource="0"
+              file="Source/openGL/SquareComponent.cpp"/>
+        <FILE id="sa4dbn" name="SquareComponent.h" compile="0" resource="0"
+              file="Source/openGL/SquareComponent.h"/>
+        <GROUP id="{A0ABC0E2-B9DE-E386-CCD6-1B23350BC3CB}" name="text">
+          <FILE id="C0bvhI" name="CustomFonts.cpp" compile="1" resource="0" file="Source/openGL/text/CustomFonts.cpp"/>
+          <FILE id="xP7Vif" name="CustomFonts.h" compile="0" resource="0" file="Source/openGL/text/CustomFonts.h"/>
+          <GROUP id="{DB82E47E-4F99-8694-A54A-8ADB87673952}" name="freetype">
+            <GROUP id="{6D56B2B2-A9EA-03FF-4C3B-7E6AC8A1C0C7}" name="adapterForOpenGLES2">
+              <FILE id="ZiQhox" name="Allocator.h" compile="0" resource="0" file="Source/openGL/text/freetype/adapterForOpenGLES2.0/Allocator.h"/>
+              <FILE id="iKNXfu" name="FontAtlas.cpp" compile="1" resource="0" file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FontAtlas.cpp"/>
+              <FILE id="kq7Avb" name="FontAtlas.h" compile="0" resource="0" file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FontAtlas.h"/>
+              <FILE id="QcYZm5" name="FontAtlasFactory.cpp" compile="1" resource="0"
+                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FontAtlasFactory.cpp"/>
+              <FILE id="UlU3hH" name="FontAtlasFactory.h" compile="0" resource="0"
+                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FontAtlasFactory.h"/>
+              <FILE id="N3WvGt" name="FontInfo.h" compile="0" resource="0" file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FontInfo.h"/>
+              <FILE id="hp4pYH" name="FreeTypeBitmapChar.cpp" compile="1" resource="0"
+                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FreeTypeBitmapChar.cpp"/>
+              <FILE id="bmSJtv" name="FreeTypeBitmapChar.h" compile="0" resource="0"
+                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FreeTypeBitmapChar.h"/>
+              <FILE id="BcfeNZ" name="FreeTypeBitmapFont.cpp" compile="1" resource="0"
+                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FreeTypeBitmapFont.cpp"/>
+              <FILE id="QtbWmN" name="FreeTypeBitmapFont.h" compile="0" resource="0"
+                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FreeTypeBitmapFont.h"/>
+              <FILE id="EF8ocI" name="GLCallBatcher.cpp" compile="1" resource="0"
+                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/GLCallBatcher.cpp"/>
+              <FILE id="sv7Ng4" name="GLCallBatcher.h" compile="0" resource="0" file="Source/openGL/text/freetype/adapterForOpenGLES2.0/GLCallBatcher.h"/>
+              <FILE id="EI8nwN" name="OpenGLEnvironment.h" compile="0" resource="0"
+                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/OpenGLEnvironment.h"/>
+              <FILE id="CkBwB3" name="OpenGLEnvironmentImpl.cpp" compile="1" resource="0"
+                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/OpenGLEnvironmentImpl.cpp"/>
+              <FILE id="y6hWw6" name="OpenGLEnvironmentImpl.h" compile="0" resource="0"
+                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/OpenGLEnvironmentImpl.h"/>
+              <FILE id="rkOblG" name="RacException.cpp" compile="1" resource="0"
+                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/RacException.cpp"/>
+              <FILE id="OpgLmt" name="RacException.h" compile="0" resource="0" file="Source/openGL/text/freetype/adapterForOpenGLES2.0/RacException.h"/>
+              <FILE id="z7coxD" name="TreeNode.cpp" compile="1" resource="0" file="Source/openGL/text/freetype/adapterForOpenGLES2.0/TreeNode.cpp"/>
+              <FILE id="zr5Yh1" name="TreeNode.h" compile="0" resource="0" file="Source/openGL/text/freetype/adapterForOpenGLES2.0/TreeNode.h"/>
+            </GROUP>
+            <FILE id="X6GhkJ" name="FreeTypeAmalgam.c" compile="1" resource="0"
+                  file="Source/openGL/text/freetype/FreeTypeAmalgam.c"/>
+            <FILE id="SXTda1" name="FreeTypeAmalgam.h" compile="0" resource="0"
+                  file="Source/openGL/text/freetype/FreeTypeAmalgam.h"/>
+          </GROUP>
+          <FILE id="OXDqMP" name="TextToTextureComponent.cpp" compile="1" resource="0"
+                file="Source/openGL/text/TextToTextureComponent.cpp"/>
+          <FILE id="GTXr8F" name="TextToTextureComponent.h" compile="0" resource="0"
+                file="Source/openGL/text/TextToTextureComponent.h"/>
+          <FILE id="vgOz5c" name="TextWithFreetypeFontAtlasComponent.cpp" compile="1"
+                resource="0" file="Source/openGL/text/TextWithFreetypeFontAtlasComponent.cpp"/>
+          <FILE id="ZzdicL" name="TextWithFreetypeFontAtlasComponent.h" compile="0"
+                resource="0" file="Source/openGL/text/TextWithFreetypeFontAtlasComponent.h"/>
+          <FILE id="u1rrAD" name="TextWithJuceFontAtlasComponent.cpp" compile="1"
+                resource="0" file="Source/openGL/text/TextWithJuceFontAtlasComponent.cpp"/>
+          <FILE id="eJoG8M" name="TextWithJuceFontAtlasComponent.h" compile="0"
+                resource="0" file="Source/openGL/text/TextWithJuceFontAtlasComponent.h"/>
+        </GROUP>
+        <FILE id="uoYuMT" name="TexturedComponent.cpp" compile="1" resource="0"
+              file="Source/openGL/TexturedComponent.cpp"/>
+        <FILE id="om9OW4" name="TexturedComponent.h" compile="0" resource="0"
+              file="Source/openGL/TexturedComponent.h"/>
+        <FILE id="HFLNx5" name="TexturedCubeComponent.cpp" compile="1" resource="0"
+              file="Source/openGL/TexturedCubeComponent.cpp"/>
+        <FILE id="QM5ytn" name="TexturedCubeComponent.h" compile="0" resource="0"
+              file="Source/openGL/TexturedCubeComponent.h"/>
+        <FILE id="tAUzI8" name="TriangleComponent.cpp" compile="1" resource="0"
+              file="Source/openGL/TriangleComponent.cpp"/>
+        <FILE id="QQb9o6" name="TriangleComponent.h" compile="0" resource="0"
+              file="Source/openGL/TriangleComponent.h"/>
+      </GROUP>
+    </GROUP>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_gui_audio" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_cryptography" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_video" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="1"/>
+  </MODULES>
+  <EXPORTFORMATS>
+    <XCODE_MAC targetFolder="IDE/MacOSX" juceFolder="JuceLibraryCode/modules"
+               extraDefs="OS_MACOSX=1" postbuildCommand="mkdir -p $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH&#10;mkdir -p $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Resources&#10;cp -r ../../Resources/Shaders $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Resources/Shaders&#10;cp -r ../../Resources/Fonts $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Resources/Fonts&#10;cp ../../Resources/*.png $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Resources">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" osxSDK="default" osxCompatibility="default" osxArchitecture="default"
+                       isDebug="1" optimisation="1" targetName="OpenGLES2Examples"/>
+        <CONFIGURATION name="Release" osxSDK="default" osxCompatibility="default" osxArchitecture="default"
+                       isDebug="0" optimisation="2" targetName="OpenGLES2Examples"/>
+      </CONFIGURATIONS>
+    </XCODE_MAC>
+    <XCODE_IPHONE targetFolder="IDE/iOS" juceFolder="JuceLibraryCode/modules" extraDefs="OS_MACIOS=1"
+                  postbuildCommand="cp -r ../../Resources/Shaders/*.vsh $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH&#10;cp -r ../../Resources/Shaders/*.fsh $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH&#10;cp -r ../../Resources/Fonts/*.ttf $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH&#10;cp -r ../../Resources/*.png $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH&#10;">
+      <CONFIGURATIONS>
+        <CONFIGURATION name="Debug" iosCompatibility="default" isDebug="1" optimisation="1"
+                       targetName="OpenGLES2Examples"/>
+        <CONFIGURATION name="Release" iosCompatibility="default" isDebug="0" optimisation="2"
+                       targetName="OpenGLES2Examples"/>
+      </CONFIGURATIONS>
+    </XCODE_IPHONE>
+  </EXPORTFORMATS>
+  <JUCEOPTIONS/>
+</JUCERPROJECT>
