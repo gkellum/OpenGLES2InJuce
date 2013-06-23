@@ -8,6 +8,10 @@
 
 #include <map>
 
+/**
+ * This Freetype component has never worked correctly. I gave up on working out the
+ * kinks in it after seeing how fast the Juce text rendering already is.
+ */
 class TextWithFreetypeFontAtlasComponent : public Component
                                          , public OpenGLRenderer
 {

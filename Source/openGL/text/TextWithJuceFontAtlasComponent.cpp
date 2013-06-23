@@ -272,7 +272,7 @@ void TextWithJuceFontAtlasComponent::renderOpenGL()
     shaderProgram->use();
 
     // Bind the texture
-    String textMessage("This text was drawn using a font atlas created using Juce's text renderer. "
+    String textMessage("This text was drawn using a single texture for each character where each texture was created at startup using Juce's text renderer. "
                        "Below is a series of numbers cycling from 0 - 9:");
     int endY = drawTextWithBitmapFont(textMessage, 5, 5);
 

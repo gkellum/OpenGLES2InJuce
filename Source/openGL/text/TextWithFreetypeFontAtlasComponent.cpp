@@ -1,7 +1,6 @@
 #include "TextWithFreetypeFontAtlasComponent.h"
 
 #include "ResourceManager.h"
-#include "CustomFonts.h"
 #include "FontAtlasFactory.h"
 #include "RacException.h"
 #include "FreeTypeBitmapFont.h"
