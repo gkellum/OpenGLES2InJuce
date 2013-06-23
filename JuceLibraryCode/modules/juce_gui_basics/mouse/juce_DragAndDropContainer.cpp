@@ -37,7 +37,7 @@ public:
                         Component* const sourceComponent,
                         Component* const mouseDragSource_,
                         DragAndDropContainer& owner_,
-                        const Point<int>& imageOffset_)
+                        Point<int> imageOffset_)
         : sourceDetails (desc, sourceComponent, Point<int>()),
           image (im),
           owner (owner_),
@@ -121,7 +121,7 @@ public:
             updateLocation (true, e.getScreenPosition());
     }
 
-    void updateLocation (const bool canDoExternalDrag, const Point<int>& screenPos)
+    void updateLocation (const bool canDoExternalDrag, Point<int> screenPos)
     {
         DragAndDropTarget::SourceDetails details (sourceDetails);
 
@@ -187,7 +187,7 @@ private:
         return dynamic_cast <DragAndDropTarget*> (currentlyOverComp.get());
     }
 
-    DragAndDropTarget* findTarget (const Point<int>& screenPos, Point<int>& relativePos,
+    DragAndDropTarget* findTarget (Point<int> screenPos, Point<int>& relativePos,
                                    Component*& resultComponent) const
     {
         Component* hit = getParentComponent();
@@ -220,7 +220,7 @@ private:
         return nullptr;
     }
 
-    void setNewScreenPos (const Point<int>& screenPos)
+    void setNewScreenPos (Point<int> screenPos)
     {
         Point<int> newPos (screenPos - imageOffset);
 
@@ -253,7 +253,7 @@ private:
         bool canMoveFiles;
     };
 
-    void checkForExternalDrag (DragAndDropTarget::SourceDetails& details, const Point<int>& screenPos)
+    void checkForExternalDrag (DragAndDropTarget::SourceDetails& details, Point<int> screenPos)
     {
         if (! hasCheckedForExternalDrag)
         {
@@ -435,10 +435,10 @@ bool DragAndDropContainer::shouldDropFilesWhenDraggedExternally (const DragAndDr
 }
 
 //==============================================================================
-DragAndDropTarget::SourceDetails::SourceDetails (const var& description_, Component* sourceComponent_, const Point<int>& localPosition_) noexcept
-    : description (description_),
-      sourceComponent (sourceComponent_),
-      localPosition (localPosition_)
+DragAndDropTarget::SourceDetails::SourceDetails (const var& desc, Component* comp, Point<int> pos) noexcept
+    : description (desc),
+      sourceComponent (comp),
+      localPosition (pos)
 {
 }
 

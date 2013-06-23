@@ -45,7 +45,7 @@ public:
     /** Creates an ImageButton.
 
         Use setImage() to specify the image to use. The colours and opacities that
-        are specified here can be changed later using setDrawingOptions().
+        are specified here can be changed later using setImages().
 
         @param name                 the name to give the component
     */
@@ -101,13 +101,13 @@ public:
                     bool preserveImageProportions,
                     const Image& normalImage,
                     float imageOpacityWhenNormal,
-                    const Colour& overlayColourWhenNormal,
+                    Colour overlayColourWhenNormal,
                     const Image& overImage,
                     float imageOpacityWhenOver,
-                    const Colour& overlayColourWhenOver,
+                    Colour overlayColourWhenOver,
                     const Image& downImage,
                     float imageOpacityWhenDown,
-                    const Colour& overlayColourWhenDown,
+                    Colour overlayColourWhenDown,
                     float hitTestAlphaThreshold = 0.0f);
 
     /** Returns the currently set 'normal' image. */

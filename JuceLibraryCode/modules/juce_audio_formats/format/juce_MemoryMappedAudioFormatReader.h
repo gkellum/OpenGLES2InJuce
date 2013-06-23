@@ -62,16 +62,16 @@ public:
     bool mapEntireFile();
 
     /** Attempts to map a section of the file into memory. */
-    bool mapSectionOfFile (const Range<int64>& samplesToMap);
+    bool mapSectionOfFile (Range<int64> samplesToMap);
 
     /** Returns the sample range that's currently memory-mapped and available for reading. */
-    const Range<int64>& getMappedSection() const noexcept   { return mappedSection; }
+    Range<int64> getMappedSection() const noexcept          { return mappedSection; }
 
     /** Touches the memory for the given sample, to force it to be loaded into active memory. */
     void touchSample (int64 sample) const noexcept;
 
     /** Returns the number of bytes currently being mapped */
-    size_t getNumBytesUsed() const           { return map != nullptr ? map->getSize() : 0; }
+    size_t getNumBytesUsed() const                          { return map != nullptr ? map->getSize() : 0; }
 
 protected:
     File file;
@@ -80,9 +80,24 @@ protected:
     int64 dataChunkStart, dataLength;
     int bytesPerFrame;
 
+    /** Converts a sample index to a byte position in the file. */
     inline int64 sampleToFilePos (int64 sample) const noexcept       { return dataChunkStart + sample * bytesPerFrame; }
+
+    /** Converts a byte position in the file to a sample index. */
     inline int64 filePosToSample (int64 filePos) const noexcept      { return (filePos - dataChunkStart) / bytesPerFrame; }
+
+    /** Converts a sample index to a pointer to the mapped file memory. */
     inline const void* sampleToPointer (int64 sample) const noexcept { return addBytesToPointer (map->getData(), sampleToFilePos (sample) - map->getRange().getStart()); }
+
+    /** Used by AudioFormatReader subclasses to scan for min/max ranges in interleaved data. */
+    template <typename SampleType, typename Endianness>
+    void scanMinAndMaxInterleaved (int channel, int64 startSampleInFile, int64 numSamples, float& mn, float& mx) const noexcept
+    {
+        typedef AudioData::Pointer <SampleType, Endianness, AudioData::Interleaved, AudioData::Const> SourceType;
+
+        SourceType (addBytesToPointer (sampleToPointer (startSampleInFile), (bitsPerSample / 8) * channel), (int) numChannels)
+           .findMinAndMax ((size_t) numSamples, mn, mx);
+    }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MemoryMappedAudioFormatReader)
 };

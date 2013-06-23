@@ -94,8 +94,6 @@ void MessageManager::MessageBase::post()
 #if JUCE_MODAL_LOOPS_PERMITTED && ! (JUCE_MAC || JUCE_IOS)
 void MessageManager::runDispatchLoop()
 {
-    jassert (isThisTheMessageThread()); // must only be called by the message thread
-
     runDispatchLoopUntil (-1);
 }
 
@@ -111,20 +109,17 @@ bool MessageManager::runDispatchLoopUntil (int millisecondsToRunFor)
 
     const int64 endTime = Time::currentTimeMillis() + millisecondsToRunFor;
 
-    while ((millisecondsToRunFor < 0 || endTime > Time::currentTimeMillis())
-            && ! quitMessageReceived)
+    while (! quitMessageReceived)
     {
         JUCE_TRY
         {
             if (! dispatchNextMessageOnSystemQueue (millisecondsToRunFor >= 0))
-            {
-                const int msToWait = (int) (endTime - Time::currentTimeMillis());
-
-                if (msToWait > 0)
-                    Thread::sleep (jmin (5, msToWait));
-            }
+                Thread::sleep (1);
         }
         JUCE_CATCH_EXCEPTION
+
+        if (millisecondsToRunFor >= 0 && Time::currentTimeMillis() >= endTime)
+            break;
     }
 
     return ! quitMessageReceived;
@@ -326,13 +321,17 @@ JUCE_API void JUCE_CALLTYPE initialiseJuce_GUI();
 JUCE_API void JUCE_CALLTYPE initialiseJuce_GUI()
 {
     JUCE_AUTORELEASEPOOL
-    MessageManager::getInstance();
+    {
+        MessageManager::getInstance();
+    }
 }
 
 JUCE_API void JUCE_CALLTYPE shutdownJuce_GUI();
 JUCE_API void JUCE_CALLTYPE shutdownJuce_GUI()
 {
     JUCE_AUTORELEASEPOOL
-    DeletedAtShutdown::deleteAll();
-    MessageManager::deleteInstance();
+    {
+        DeletedAtShutdown::deleteAll();
+        MessageManager::deleteInstance();
+    }
 }

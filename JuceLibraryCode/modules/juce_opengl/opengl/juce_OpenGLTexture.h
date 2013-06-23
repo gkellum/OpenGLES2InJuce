@@ -47,11 +47,10 @@ public:
     void loadImage (const Image& image);
 
     /** Creates a texture from a raw array of pixels.
-        The width and height provided must be valid - i.e. power-of-two unless
-        the underlying GL system allows otherwise.
+        If width and height are not powers-of-two, the texture will be created with a
+        larger size, and only the subsection (0, 0, width, height) will be initialised.
         The data is sent directly to the OpenGL driver without being flipped vertically,
         so the first pixel will be mapped onto texture coordinate (0, 0).
-        bottom-left corner of the texture
     */
     void loadARGB (const PixelARGB* pixels, int width, int height);
 
@@ -63,11 +62,10 @@ public:
     void loadARGBFlipped (const PixelARGB* pixels, int width, int height);
 
     /** Creates an alpha-channel texture from an array of alpha values.
-        The width and height provided must be valid - i.e. power-of-two unless
-        the underlying GL system allows otherwise.
+        If width and height are not powers-of-two, the texture will be created with a
+        larger size, and only the subsection (0, 0, width, height) will be initialised.
         The data is sent directly to the OpenGL driver without being flipped vertically,
         so the first pixel will be mapped onto texture coordinate (0, 0).
-        bottom-left corner of the texture
     */
     void loadAlpha (const uint8* pixels, int width, int height);
 
@@ -86,14 +84,14 @@ public:
                  float x2, float y2,
                  float x3, float y3,
                  float x4, float y4,
-                 const Colour& colour) const;
+                 Colour colour) const;
 
     /** Draws this texture into the current context, with the specified corner positions. */
     void draw3D (float x1, float y1, float z1,
                  float x2, float y2, float z2,
                  float x3, float y3, float z3,
                  float x4, float y4, float z4,
-                 const Colour& colour) const;
+                 Colour colour) const;
    #endif
 
     /** Returns the GL texture ID number. */
@@ -112,7 +110,7 @@ private:
     int width, height;
     OpenGLContext* ownerContext;
 
-    void create (int w, int h, const void*, GLenum type);
+    void create (int w, int h, const void*, GLenum, bool topLeft);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OpenGLTexture)
 };

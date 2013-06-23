@@ -113,7 +113,7 @@ public:
     /** Resets any transformations on this drawable, and positions its origin within
         its parent component.
     */
-    void setOriginWithOriginalSize (const Point<float>& originWithinParent);
+    void setOriginWithOriginalSize (Point<float> originWithinParent);
 
     /** Sets a transform for this drawable that will position it within the specified
         area of its parent component.
@@ -155,6 +155,9 @@ public:
         implementation, but it can return the basic vector objects.
     */
     static Drawable* createFromSVG (const XmlElement& svgDocument);
+
+    /** Parses an SVG path string and returns it. */
+    static Path parseSVGPath (const String& svgPath);
 
     //==============================================================================
     /** Tries to create a Drawable from a previously-saved ValueTree.

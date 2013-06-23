@@ -392,7 +392,7 @@ public:
         @returns true if it manages to change the file's time.
         @see getLastModificationTime, setLastAccessTime, setCreationTime
     */
-    bool setLastModificationTime (const Time& newTime) const;
+    bool setLastModificationTime (Time newTime) const;
 
     /** Changes the last-access time for this file.
 
@@ -400,7 +400,7 @@ public:
         @returns true if it manages to change the file's time.
         @see getLastAccessTime, setLastModificationTime, setCreationTime
     */
-    bool setLastAccessTime (const Time& newTime) const;
+    bool setLastAccessTime (Time newTime) const;
 
     /** Changes the creation date for this file.
 
@@ -408,7 +408,7 @@ public:
         @returns true if it manages to change the file's time.
         @see getCreationTime, setLastModificationTime, setLastAccessTime
     */
-    bool setCreationTime (const Time& newTime) const;
+    bool setCreationTime (Time newTime) const;
 
     /** If possible, this will try to create a version string for the given file.
 
@@ -623,7 +623,7 @@ public:
         @returns false if it can't write to the file for some reason
     */
     bool appendData (const void* dataToAppend,
-                     int numberOfBytes) const;
+                     size_t numberOfBytes) const;
 
     /** Replaces this file's contents with a given block of data.
 
@@ -640,7 +640,7 @@ public:
         @see appendText
     */
     bool replaceWithData (const void* dataToWrite,
-                          int numberOfBytes) const;
+                          size_t numberOfBytes) const;
 
     /** Appends a string to the end of the file.
 

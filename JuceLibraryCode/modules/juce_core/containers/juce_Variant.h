@@ -77,6 +77,8 @@ public:
     var (const Array<var>& value);
     var (ReferenceCountedObject* object);
     var (MethodFunction method) noexcept;
+    var (const void* binaryData, size_t dataSize);
+    var (const MemoryBlock& binaryData);
 
     var& operator= (const var& valueToCopy);
     var& operator= (int value);
@@ -93,12 +95,14 @@ public:
    #if JUCE_COMPILER_SUPPORTS_MOVE_SEMANTICS
     var (var&& other) noexcept;
     var (String&& value);
+    var (MemoryBlock&& binaryData);
     var& operator= (var&& other) noexcept;
     var& operator= (String&& value);
    #endif
 
     void swapWith (var& other) noexcept;
 
+    //==============================================================================
     operator int() const noexcept;
     operator int64() const noexcept;
     operator bool() const noexcept;
@@ -106,10 +110,27 @@ public:
     operator double() const noexcept;
     operator String() const;
     String toString() const;
+
+    /** If this variant holds an array, this provides access to it.
+        NOTE: Beware when you use this - the array pointer is only valid for the lifetime
+        of the variant that returned it, so be very careful not to call this method on temporary
+        var objects that are the return-value of a function, and which may go out of scope before
+        you use the array!
+    */
     Array<var>* getArray() const noexcept;
+
+    /** If this variant holds a memory block, this provides access to it.
+        NOTE: Beware when you use this - the MemoryBlock pointer is only valid for the lifetime
+        of the variant that returned it, so be very careful not to call this method on temporary
+        var objects that are the return-value of a function, and which may go out of scope before
+        you use the MemoryBlock!
+    */
+    MemoryBlock* getBinaryData() const noexcept;
+
     ReferenceCountedObject* getObject() const noexcept;
     DynamicObject* getDynamicObject() const noexcept;
 
+    //==============================================================================
     bool isVoid() const noexcept;
     bool isInt() const noexcept;
     bool isInt64() const noexcept;
@@ -118,6 +139,7 @@ public:
     bool isString() const noexcept;
     bool isObject() const noexcept;
     bool isArray() const noexcept;
+    bool isBinaryData() const noexcept;
     bool isMethod() const noexcept;
 
     /** Returns true if this var has the same value as the one supplied.
@@ -198,27 +220,27 @@ public:
 
     //==============================================================================
     /** If this variant is an object, this returns one of its properties. */
-    var operator[] (const Identifier& propertyName) const;
+    var operator[] (const Identifier propertyName) const;
     /** If this variant is an object, this returns one of its properties. */
     var operator[] (const char* propertyName) const;
     /** If this variant is an object, this returns one of its properties, or a default
         fallback value if the property is not set. */
-    var getProperty (const Identifier& propertyName, const var& defaultReturnValue) const;
+    var getProperty (const Identifier propertyName, const var& defaultReturnValue) const;
 
     /** If this variant is an object, this invokes one of its methods with no arguments. */
-    var call (const Identifier& method) const;
+    var call (const Identifier method) const;
     /** If this variant is an object, this invokes one of its methods with one argument. */
-    var call (const Identifier& method, const var& arg1) const;
+    var call (const Identifier method, const var& arg1) const;
     /** If this variant is an object, this invokes one of its methods with 2 arguments. */
-    var call (const Identifier& method, const var& arg1, const var& arg2) const;
+    var call (const Identifier method, const var& arg1, const var& arg2) const;
     /** If this variant is an object, this invokes one of its methods with 3 arguments. */
-    var call (const Identifier& method, const var& arg1, const var& arg2, const var& arg3);
+    var call (const Identifier method, const var& arg1, const var& arg2, const var& arg3);
     /** If this variant is an object, this invokes one of its methods with 4 arguments. */
-    var call (const Identifier& method, const var& arg1, const var& arg2, const var& arg3, const var& arg4) const;
+    var call (const Identifier method, const var& arg1, const var& arg2, const var& arg3, const var& arg4) const;
     /** If this variant is an object, this invokes one of its methods with 5 arguments. */
-    var call (const Identifier& method, const var& arg1, const var& arg2, const var& arg3, const var& arg4, const var& arg5) const;
+    var call (const Identifier method, const var& arg1, const var& arg2, const var& arg3, const var& arg4, const var& arg5) const;
     /** If this variant is an object, this invokes one of its methods with a list of arguments. */
-    var invoke (const Identifier& method, const var* arguments, int numArguments) const;
+    var invoke (const Identifier method, const var* arguments, int numArguments) const;
 
     //==============================================================================
     /** Writes a binary representation of this value to a stream.
@@ -245,6 +267,7 @@ private:
     class VariantType_String;  friend class VariantType_String;
     class VariantType_Object;  friend class VariantType_Object;
     class VariantType_Array;   friend class VariantType_Array;
+    class VariantType_Binary;  friend class VariantType_Binary;
     class VariantType_Method;  friend class VariantType_Method;
 
     union ValueUnion
@@ -256,6 +279,7 @@ private:
         char stringValue [sizeof (String)];
         ReferenceCountedObject* objectValue;
         Array<var>* arrayValue;
+        MemoryBlock* binaryValue;
         MethodFunction methodValue;
     };
 

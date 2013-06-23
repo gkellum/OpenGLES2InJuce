@@ -457,13 +457,13 @@ Result File::createDirectory() const
 }
 
 //==============================================================================
-Time File::getLastModificationTime() const                  { int64 m, a, c; getFileTimesInternal (m, a, c); return Time (m); }
-Time File::getLastAccessTime() const                        { int64 m, a, c; getFileTimesInternal (m, a, c); return Time (a); }
-Time File::getCreationTime() const                          { int64 m, a, c; getFileTimesInternal (m, a, c); return Time (c); }
+Time File::getLastModificationTime() const           { int64 m, a, c; getFileTimesInternal (m, a, c); return Time (m); }
+Time File::getLastAccessTime() const                 { int64 m, a, c; getFileTimesInternal (m, a, c); return Time (a); }
+Time File::getCreationTime() const                   { int64 m, a, c; getFileTimesInternal (m, a, c); return Time (c); }
 
-bool File::setLastModificationTime (const Time& t) const    { return setFileTimesInternal (t.toMilliseconds(), 0, 0); }
-bool File::setLastAccessTime (const Time& t) const          { return setFileTimesInternal (0, t.toMilliseconds(), 0); }
-bool File::setCreationTime (const Time& t) const            { return setFileTimesInternal (0, 0, t.toMilliseconds()); }
+bool File::setLastModificationTime (Time t) const    { return setFileTimesInternal (t.toMilliseconds(), 0, 0); }
+bool File::setLastAccessTime (Time t) const          { return setFileTimesInternal (0, t.toMilliseconds(), 0); }
+bool File::setCreationTime (Time t) const            { return setFileTimesInternal (0, 0, t.toMilliseconds()); }
 
 //==============================================================================
 bool File::loadFileAsData (MemoryBlock& destBlock) const
@@ -672,9 +672,11 @@ FileOutputStream* File::createOutputStream (const int bufferSize) const
 
 //==============================================================================
 bool File::appendData (const void* const dataToAppend,
-                       const int numberOfBytes) const
+                       const size_t numberOfBytes) const
 {
-    if (numberOfBytes <= 0)
+    jassert (((ssize_t) numberOfBytes) >= 0);
+
+    if (numberOfBytes == 0)
         return true;
 
     FileOutputStream out (*this, 8192);
@@ -682,11 +684,9 @@ bool File::appendData (const void* const dataToAppend,
 }
 
 bool File::replaceWithData (const void* const dataToWrite,
-                            const int numberOfBytes) const
+                            const size_t numberOfBytes) const
 {
-    jassert (numberOfBytes >= 0); // a negative number of bytes??
-
-    if (numberOfBytes <= 0)
+    if (numberOfBytes == 0)
         return deleteFile();
 
     TemporaryFile tempFile (*this, TemporaryFile::useHiddenFile);

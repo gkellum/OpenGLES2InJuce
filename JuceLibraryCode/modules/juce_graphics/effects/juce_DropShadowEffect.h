@@ -39,13 +39,18 @@ struct JUCE_API  DropShadow
     DropShadow() noexcept;
 
     /** Creates a drop-shadow object with the given parameters. */
-    DropShadow (const Colour& shadowColour, int radius, const Point<int>& offset) noexcept;
+    DropShadow (Colour shadowColour, int radius, Point<int> offset) noexcept;
 
     /** Renders a drop-shadow based on the alpha-channel of the given image. */
     void drawForImage (Graphics& g, const Image& srcImage) const;
 
     /** Renders a drop-shadow based on the shape of a path. */
     void drawForPath (Graphics& g, const Path& path) const;
+
+    /** Renders a drop-shadow for a rectangle.
+        Note that for speed, this approximates the shadow using gradients.
+    */
+    void drawForRectangle (Graphics& g, const Rectangle<int>& area) const;
 
     /** The colour with which to render the shadow.
         In most cases you'll probably want to leave this as black with an alpha

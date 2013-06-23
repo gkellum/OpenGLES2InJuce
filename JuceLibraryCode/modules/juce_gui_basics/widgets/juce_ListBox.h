@@ -333,7 +333,7 @@ public:
         @see selectRow
     */
     void selectRowsBasedOnModifierKeys (int rowThatWasClickedOn,
-                                        const ModifierKeys& modifiers,
+                                        ModifierKeys modifiers,
                                         bool isMouseUpEvent);
 
     //==============================================================================
@@ -541,10 +541,6 @@ public:
     /** @internal */
     void mouseWheelMove (const MouseEvent&, const MouseWheelDetails&);
     /** @internal */
-    void mouseMove (const MouseEvent&);
-    /** @internal */
-    void mouseExit (const MouseEvent&);
-    /** @internal */
     void mouseUp (const MouseEvent&);
     /** @internal */
     void colourChanged();
@@ -560,10 +556,11 @@ private:
     ListBoxModel* model;
     ScopedPointer<ListViewport> viewport;
     ScopedPointer<Component> headerComponent;
+    ScopedPointer<MouseListener> mouseMoveSelector;
     int totalItems, rowHeight, minimumRowWidth;
     int outlineThickness;
     int lastRowSelected;
-    bool mouseMoveSelects, multipleSelection, hasDoneInitialUpdate;
+    bool multipleSelection, hasDoneInitialUpdate;
     SparseSet <int> selected;
 
     void selectRowInternal (int rowNumber, bool dontScrollToShowThisRow,

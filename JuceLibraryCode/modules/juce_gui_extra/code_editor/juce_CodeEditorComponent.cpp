@@ -85,7 +85,7 @@ public:
                const float leftClip, const float rightClip,
                const float x, const int y, const int baselineOffset,
                const int lineH, const float characterWidth,
-               const Colour& highlightColour) const
+               const Colour highlightColour) const
     {
         if (highlightColumnStart < highlightColumnEnd)
         {
@@ -677,6 +677,7 @@ void CodeEditorComponent::scrollToLineInternal (int newFirstLineOnScreen)
 
         updateCachedIterators (firstLineOnScreen);
         rebuildLineTokensAsync();
+        pimpl->handleUpdateNowIfNeeded();
     }
 }
 
@@ -709,7 +710,7 @@ void CodeEditorComponent::scrollBy (int deltaLines)
     scrollToLine (firstLineOnScreen + deltaLines);
 }
 
-void CodeEditorComponent::scrollToKeepLinesOnScreen (const Range<int>& rangeToShow)
+void CodeEditorComponent::scrollToKeepLinesOnScreen (Range<int> rangeToShow)
 {
     if (rangeToShow.getStart() < firstLineOnScreen)
         scrollBy (rangeToShow.getStart() - firstLineOnScreen);
@@ -1039,14 +1040,16 @@ bool CodeEditorComponent::moveCaretToStartOfLine (const bool selecting)
 bool CodeEditorComponent::moveCaretToEnd (const bool selecting)
 {
     newTransaction();
-    moveCaretTo (CodeDocument::Position (document, std::numeric_limits<int>::max(), std::numeric_limits<int>::max()), selecting);
+    moveCaretTo (CodeDocument::Position (document, std::numeric_limits<int>::max(),
+                                         std::numeric_limits<int>::max()), selecting);
     return true;
 }
 
 bool CodeEditorComponent::moveCaretToEndOfLine (const bool selecting)
 {
     newTransaction();
-    moveCaretTo (CodeDocument::Position (document, caretPos.getLineNumber(), std::numeric_limits<int>::max()), selecting);
+    moveCaretTo (CodeDocument::Position (document, caretPos.getLineNumber(),
+                                         std::numeric_limits<int>::max()), selecting);
     return true;
 }
 
@@ -1057,13 +1060,9 @@ bool CodeEditorComponent::deleteBackwards (const bool moveInWholeWordSteps)
         cut(); // in case something is already highlighted
         moveCaretTo (document.findWordBreakBefore (caretPos), true);
     }
-    else
+    else if (selectionStart == selectionEnd && ! skipBackwardsToPreviousTab())
     {
-        if (selectionStart == selectionEnd)
-        {
-            if (! skipBackwardsToPreviousTab())
-                selectionStart.moveBy (-1);
-        }
+        selectionStart.moveBy (-1);
     }
 
     cut();
@@ -1114,7 +1113,8 @@ bool CodeEditorComponent::deleteForwards (const bool moveInWholeWordSteps)
 bool CodeEditorComponent::selectAll()
 {
     newTransaction();
-    selectRegion (CodeDocument::Position (document, std::numeric_limits<int>::max(), std::numeric_limits<int>::max()),
+    selectRegion (CodeDocument::Position (document, std::numeric_limits<int>::max(),
+                                          std::numeric_limits<int>::max()),
                   CodeDocument::Position (document, 0, 0));
     return true;
 }
@@ -1484,7 +1484,7 @@ void CodeEditorComponent::setFont (const Font& newFont)
     resized();
 }
 
-void CodeEditorComponent::ColourScheme::set (const String& name, const Colour& colour)
+void CodeEditorComponent::ColourScheme::set (const String& name, const Colour colour)
 {
     for (int i = 0; i < types.size(); ++i)
     {

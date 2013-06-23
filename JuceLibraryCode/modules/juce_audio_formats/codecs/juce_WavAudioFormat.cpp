@@ -38,7 +38,7 @@ const char* const WavAudioFormat::bwavCodingHistory    = "bwav coding history";
 StringPairArray WavAudioFormat::createBWAVMetadata (const String& description,
                                                     const String& originator,
                                                     const String& originatorRef,
-                                                    const Time& date,
+                                                    const Time date,
                                                     const int64 timeReferenceSamples,
                                                     const String& codingHistory)
 {
@@ -54,6 +54,17 @@ StringPairArray WavAudioFormat::createBWAVMetadata (const String& description,
 
     return m;
 }
+
+const char* const WavAudioFormat::acidOneShot          = "acid one shot";
+const char* const WavAudioFormat::acidRootSet          = "acid root set";
+const char* const WavAudioFormat::acidStretch          = "acid stretch";
+const char* const WavAudioFormat::acidDiskBased        = "acid disk based";
+const char* const WavAudioFormat::acidizerFlag         = "acidizer flag";
+const char* const WavAudioFormat::acidRootNote         = "acid root note";
+const char* const WavAudioFormat::acidBeats            = "acid beats";
+const char* const WavAudioFormat::acidDenominator      = "acid denominator";
+const char* const WavAudioFormat::acidNumerator        = "acid numerator";
+const char* const WavAudioFormat::acidTempo            = "acid tempo";
 
 
 //==============================================================================
@@ -98,7 +109,7 @@ namespace WavFileHelpers
 
         static MemoryBlock createFrom (const StringPairArray& values)
         {
-            const size_t sizeNeeded = sizeof (BWAVChunk) + (size_t) values [WavAudioFormat::bwavCodingHistory].getNumBytesAsUTF8();
+            const size_t sizeNeeded = sizeof (BWAVChunk) + values [WavAudioFormat::bwavCodingHistory].getNumBytesAsUTF8();
             MemoryBlock data ((sizeNeeded + 3) & ~3);
             data.fillWith (0);
 
@@ -401,7 +412,7 @@ namespace WavFileHelpers
                                             const int chunkType, MemoryOutputStream& out)
         {
             const String label (values.getValue (prefix + "Text", prefix));
-            const int labelLength = label.getNumBytesAsUTF8() + 1;
+            const int labelLength = (int) label.getNumBytesAsUTF8() + 1;
             const int chunkLength = 4 + labelLength + (labelLength & 1);
 
             out.writeInt (chunkType);
@@ -417,7 +428,7 @@ namespace WavFileHelpers
         {
             const String text (values.getValue (prefix + "Text", prefix));
 
-            const int textLength = text.getNumBytesAsUTF8() + 1; // include null terminator
+            const int textLength = (int) text.getNumBytesAsUTF8() + 1; // include null terminator
             int chunkLength = textLength + 20 + (textLength & 1);
 
             out.writeInt (chunkName ("ltxt"));
@@ -456,6 +467,49 @@ namespace WavFileHelpers
             }
         }
     }
+
+    //==============================================================================
+    struct AcidChunk
+    {
+        /** Reads an acid RIFF chunk from a stream positioned just after the size byte. */
+        AcidChunk (InputStream& input, int length)
+        {
+            zerostruct (*this);
+            input.read (this, jmin ((int) sizeof (*this), length));
+        }
+
+        void addToMetadata (StringPairArray& values) const
+        {
+            setBoolFlag (values, WavAudioFormat::acidOneShot,   0x01);
+            setBoolFlag (values, WavAudioFormat::acidRootSet,   0x02);
+            setBoolFlag (values, WavAudioFormat::acidStretch,   0x04);
+            setBoolFlag (values, WavAudioFormat::acidDiskBased, 0x08);
+            setBoolFlag (values, WavAudioFormat::acidizerFlag,  0x10);
+
+            if (flags & 0x02) // root note set
+                values.set (WavAudioFormat::acidRootNote, String (rootNote));
+
+            values.set (WavAudioFormat::acidBeats,       String (numBeats));
+            values.set (WavAudioFormat::acidDenominator, String (meterDenominator));
+            values.set (WavAudioFormat::acidNumerator,   String (meterNumerator));
+            values.set (WavAudioFormat::acidTempo,       String (tempo));
+        }
+
+        void setBoolFlag (StringPairArray& values, const char* name, int32 mask) const
+        {
+            values.set (name, (flags & mask) ? "1" : "0");
+        }
+
+        int32 flags;
+        int16 rootNote;
+        int16 reserved1;
+        float reserved2;
+        int32 numBeats;
+        int16 meterDenominator;
+        int16 meterNumerator;
+        float tempo;
+
+    } JUCE_PACKED;
 
     //==============================================================================
     struct ExtensibleWavSubFormat
@@ -693,6 +747,10 @@ public:
                         }
                     }
                 }
+                else if (chunkType == chunkName ("acid"))
+                {
+                    AcidChunk (*input, length).addToMetadata (metadataValues);
+                }
                 else if (chunkEnd <= input->getPosition())
                 {
                     break;
@@ -755,7 +813,7 @@ public:
             case 16:    ReadHelper<AudioData::Int32, AudioData::Int16, AudioData::LittleEndian>::read (destSamples, startOffsetInDestBuffer, numDestChannels, sourceData, numChannels, numSamples); break;
             case 24:    ReadHelper<AudioData::Int32, AudioData::Int24, AudioData::LittleEndian>::read (destSamples, startOffsetInDestBuffer, numDestChannels, sourceData, numChannels, numSamples); break;
             case 32:    if (usesFloatingPointData) ReadHelper<AudioData::Float32, AudioData::Float32, AudioData::LittleEndian>::read (destSamples, startOffsetInDestBuffer, numDestChannels, sourceData, numChannels, numSamples);
-                        else                       ReadHelper<AudioData::Int32, AudioData::Int32, AudioData::LittleEndian>::read (destSamples, startOffsetInDestBuffer, numDestChannels, sourceData, numChannels, numSamples); break;
+                        else                       ReadHelper<AudioData::Int32,   AudioData::Int32,   AudioData::LittleEndian>::read (destSamples, startOffsetInDestBuffer, numDestChannels, sourceData, numChannels, numSamples); break;
             default:    jassertfalse; break;
         }
     }
@@ -832,7 +890,7 @@ public:
             default:    jassertfalse; break;
         }
 
-        if (! output->write (tempBlock.getData(), (int) bytes))
+        if (! output->write (tempBlock.getData(), bytes))
         {
             // failed to write to disk, so let's try writing the header.
             // If it's just run out of disk space, then if it does manage
@@ -1057,16 +1115,12 @@ public:
 private:
     template <typename SampleType>
     void scanMinAndMax (int64 startSampleInFile, int64 numSamples,
-                        float& min0, float& max0, float& min1, float& max1) const
+                        float& min0, float& max0, float& min1, float& max1) const noexcept
     {
-        typedef AudioData::Pointer <SampleType, AudioData::LittleEndian, AudioData::Interleaved, AudioData::Const> SourceType;
-
-        SourceType (sampleToPointer (startSampleInFile), (int) numChannels)
-            .findMinAndMax ((size_t) numSamples, min0, max0);
+        scanMinAndMaxInterleaved<SampleType, AudioData::LittleEndian> (0, startSampleInFile, numSamples, min0, max0);
 
         if (numChannels > 1)
-            SourceType (addBytesToPointer (sampleToPointer (startSampleInFile), bitsPerSample / 8), (int) numChannels)
-                  .findMinAndMax ((size_t) numSamples, min1, max1);
+            scanMinAndMaxInterleaved<SampleType, AudioData::LittleEndian> (1, startSampleInFile, numSamples, min1, max1);
         else
             min1 = max1 = 0;
     }
