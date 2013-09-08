@@ -1,10 +1,6 @@
 #include "TextToTextureComponent.h"
 
 #include "ResourceManager.h"
-#include "FontAtlasFactory.h"
-#include "RacException.h"
-#include "FreeTypeBitmapFont.h"
-#include "FontAtlas.h"
 
 #include <cmath>
 

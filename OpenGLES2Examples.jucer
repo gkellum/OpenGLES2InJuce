@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="WM00Av" name="OpenGLES2Examples" projectType="guiapp" version="1.0.0"
-              bundleIdentifier="com.gregkellum.OpenGLES2Examples" jucerVersion="3.0.0">
+              bundleIdentifier="com.gregkellum.OpenGLES2Examples" jucerVersion="3.1.0">
   <MAINGROUP id="TU1fIy" name="OpenGLES2Examples">
     <GROUP id="{5D336439-7B37-10CD-D599-7C97A2BDD999}" name="Source">
       <GROUP id="{30E60D7D-1129-BD53-B537-8BABFA292BFB}" name="main">
@@ -30,54 +30,10 @@
         <FILE id="sa4dbn" name="SquareComponent.h" compile="0" resource="0"
               file="Source/openGL/SquareComponent.h"/>
         <GROUP id="{A0ABC0E2-B9DE-E386-CCD6-1B23350BC3CB}" name="text">
-          <FILE id="C0bvhI" name="CustomFonts.cpp" compile="1" resource="0" file="Source/openGL/text/CustomFonts.cpp"/>
-          <FILE id="xP7Vif" name="CustomFonts.h" compile="0" resource="0" file="Source/openGL/text/CustomFonts.h"/>
-          <GROUP id="{DB82E47E-4F99-8694-A54A-8ADB87673952}" name="freetype">
-            <GROUP id="{6D56B2B2-A9EA-03FF-4C3B-7E6AC8A1C0C7}" name="adapterForOpenGLES2">
-              <FILE id="ZiQhox" name="Allocator.h" compile="0" resource="0" file="Source/openGL/text/freetype/adapterForOpenGLES2.0/Allocator.h"/>
-              <FILE id="iKNXfu" name="FontAtlas.cpp" compile="1" resource="0" file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FontAtlas.cpp"/>
-              <FILE id="kq7Avb" name="FontAtlas.h" compile="0" resource="0" file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FontAtlas.h"/>
-              <FILE id="QcYZm5" name="FontAtlasFactory.cpp" compile="1" resource="0"
-                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FontAtlasFactory.cpp"/>
-              <FILE id="UlU3hH" name="FontAtlasFactory.h" compile="0" resource="0"
-                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FontAtlasFactory.h"/>
-              <FILE id="N3WvGt" name="FontInfo.h" compile="0" resource="0" file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FontInfo.h"/>
-              <FILE id="hp4pYH" name="FreeTypeBitmapChar.cpp" compile="1" resource="0"
-                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FreeTypeBitmapChar.cpp"/>
-              <FILE id="bmSJtv" name="FreeTypeBitmapChar.h" compile="0" resource="0"
-                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FreeTypeBitmapChar.h"/>
-              <FILE id="BcfeNZ" name="FreeTypeBitmapFont.cpp" compile="1" resource="0"
-                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FreeTypeBitmapFont.cpp"/>
-              <FILE id="QtbWmN" name="FreeTypeBitmapFont.h" compile="0" resource="0"
-                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/FreeTypeBitmapFont.h"/>
-              <FILE id="EF8ocI" name="GLCallBatcher.cpp" compile="1" resource="0"
-                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/GLCallBatcher.cpp"/>
-              <FILE id="sv7Ng4" name="GLCallBatcher.h" compile="0" resource="0" file="Source/openGL/text/freetype/adapterForOpenGLES2.0/GLCallBatcher.h"/>
-              <FILE id="EI8nwN" name="OpenGLEnvironment.h" compile="0" resource="0"
-                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/OpenGLEnvironment.h"/>
-              <FILE id="CkBwB3" name="OpenGLEnvironmentImpl.cpp" compile="1" resource="0"
-                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/OpenGLEnvironmentImpl.cpp"/>
-              <FILE id="y6hWw6" name="OpenGLEnvironmentImpl.h" compile="0" resource="0"
-                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/OpenGLEnvironmentImpl.h"/>
-              <FILE id="rkOblG" name="RacException.cpp" compile="1" resource="0"
-                    file="Source/openGL/text/freetype/adapterForOpenGLES2.0/RacException.cpp"/>
-              <FILE id="OpgLmt" name="RacException.h" compile="0" resource="0" file="Source/openGL/text/freetype/adapterForOpenGLES2.0/RacException.h"/>
-              <FILE id="z7coxD" name="TreeNode.cpp" compile="1" resource="0" file="Source/openGL/text/freetype/adapterForOpenGLES2.0/TreeNode.cpp"/>
-              <FILE id="zr5Yh1" name="TreeNode.h" compile="0" resource="0" file="Source/openGL/text/freetype/adapterForOpenGLES2.0/TreeNode.h"/>
-            </GROUP>
-            <FILE id="X6GhkJ" name="FreeTypeAmalgam.c" compile="1" resource="0"
-                  file="Source/openGL/text/freetype/FreeTypeAmalgam.c"/>
-            <FILE id="SXTda1" name="FreeTypeAmalgam.h" compile="0" resource="0"
-                  file="Source/openGL/text/freetype/FreeTypeAmalgam.h"/>
-          </GROUP>
           <FILE id="OXDqMP" name="TextToTextureComponent.cpp" compile="1" resource="0"
                 file="Source/openGL/text/TextToTextureComponent.cpp"/>
           <FILE id="GTXr8F" name="TextToTextureComponent.h" compile="0" resource="0"
                 file="Source/openGL/text/TextToTextureComponent.h"/>
-          <FILE id="vgOz5c" name="TextWithFreetypeFontAtlasComponent.cpp" compile="1"
-                resource="0" file="Source/openGL/text/TextWithFreetypeFontAtlasComponent.cpp"/>
-          <FILE id="ZzdicL" name="TextWithFreetypeFontAtlasComponent.h" compile="0"
-                resource="0" file="Source/openGL/text/TextWithFreetypeFontAtlasComponent.h"/>
           <FILE id="u1rrAD" name="TextWithJuceFontAtlasComponent.cpp" compile="1"
                 resource="0" file="Source/openGL/text/TextWithJuceFontAtlasComponent.cpp"/>
           <FILE id="eJoG8M" name="TextWithJuceFontAtlasComponent.h" compile="0"

@@ -5,7 +5,6 @@
 #include "TexturedComponent.h"
 #include "TexturedCubeComponent.h"
 #include "TextToTextureComponent.h"
-#include "TextWithFreetypeFontAtlasComponent.h"
 #include "TextWithJuceFontAtlasComponent.h"
 
 iOSContentComponent::iOSContentComponent()
