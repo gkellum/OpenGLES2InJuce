@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -66,16 +65,14 @@ void FileBasedDocument::setFile (const File& newFile)
 }
 
 //==============================================================================
-#if JUCE_MODAL_LOOPS_PERMITTED
-bool FileBasedDocument::loadFrom (const File& newFile,
-                                  const bool showMessageOnFailure)
+Result FileBasedDocument::loadFrom (const File& newFile, const bool showMessageOnFailure)
 {
     MouseCursor::showWaitCursor();
 
     const File oldFile (documentFile);
     documentFile = newFile;
 
-    Result result (Result::fail ("The file doesn't exist"));
+    Result result (Result::fail (TRANS("The file doesn't exist")));
 
     if (newFile.existsAsFile())
     {
@@ -87,7 +84,7 @@ bool FileBasedDocument::loadFrom (const File& newFile,
             MouseCursor::hideWaitCursor();
 
             setLastDocumentOpened (newFile);
-            return true;
+            return result;
         }
     }
 
@@ -95,19 +92,18 @@ bool FileBasedDocument::loadFrom (const File& newFile,
     MouseCursor::hideWaitCursor();
 
     if (showMessageOnFailure)
-    {
-        AlertWindow::showMessageBox (AlertWindow::WarningIcon,
-                                     TRANS("Failed to open file..."),
-                                     TRANS("There was an error while trying to load the file: FLNM")
-                                        .replace ("FLNM", "\n" + newFile.getFullPathName())
-                                       + "\n\n"
-                                       + result.getErrorMessage());
-    }
+        AlertWindow::showMessageBoxAsync (AlertWindow::WarningIcon,
+                                          TRANS("Failed to open file..."),
+                                          TRANS("There was an error while trying to load the file: FLNM")
+                                              .replace ("FLNM", "\n" + newFile.getFullPathName())
+                                            + "\n\n"
+                                            + result.getErrorMessage());
 
-    return false;
+    return result;
 }
 
-bool FileBasedDocument::loadFromUserSpecifiedFile (const bool showMessageOnFailure)
+#if JUCE_MODAL_LOOPS_PERMITTED
+Result FileBasedDocument::loadFromUserSpecifiedFile (const bool showMessageOnFailure)
 {
     FileChooser fc (openFileDialogTitle,
                     getLastDocumentOpened(),
@@ -116,14 +112,14 @@ bool FileBasedDocument::loadFromUserSpecifiedFile (const bool showMessageOnFailu
     if (fc.browseForFileToOpen())
         return loadFrom (fc.getResult(), showMessageOnFailure);
 
-    return false;
+    return Result::fail (TRANS("User cancelled"));
 }
 
 static bool askToOverwriteFile (const File& newFile)
 {
     return AlertWindow::showOkCancelBox (AlertWindow::WarningIcon,
                                             TRANS("File already exists"),
-                                            TRANS("There's already a file called: FLMN")
+                                            TRANS("There's already a file called: FLNM")
                                                 .replace ("FLNM", newFile.getFullPathName())
                                              + "\n\n"
                                              + TRANS("Are you sure you want to overwrite it?"),
@@ -180,15 +176,13 @@ FileBasedDocument::SaveResult FileBasedDocument::saveAs (const File& newFile,
     MouseCursor::hideWaitCursor();
 
     if (showMessageOnFailure)
-    {
-        AlertWindow::showMessageBox (AlertWindow::WarningIcon,
-                                     TRANS("Error writing to file..."),
-                                     TRANS("An error occurred while trying to save \"DCNM\" to the file: FLNM")
-                                         .replace ("DCNM", getDocumentTitle())
-                                         .replace ("FLNM", "\n" + newFile.getFullPathName())
-                                        + "\n\n"
-                                        + result.getErrorMessage());
-    }
+        AlertWindow::showMessageBoxAsync (AlertWindow::WarningIcon,
+                                          TRANS("Error writing to file..."),
+                                          TRANS("An error occurred while trying to save \"DCNM\" to the file: FLNM")
+                                            .replace ("DCNM", getDocumentTitle())
+                                            .replace ("FLNM", "\n" + newFile.getFullPathName())
+                                           + "\n\n"
+                                           + result.getErrorMessage());
 
     return failedToWriteToFile;
 }

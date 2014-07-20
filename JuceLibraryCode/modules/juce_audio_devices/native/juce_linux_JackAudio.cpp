@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -219,16 +218,36 @@ public:
         return names;
     }
 
-    StringArray getOutputChannelNames()         { return getChannelNames (false); }
-    StringArray getInputChannelNames()          { return getChannelNames (true); }
-    int getNumSampleRates()                     { return client != nullptr ? 1 : 0; }
-    double getSampleRate (int /*index*/)        { return client != nullptr ? juce::jack_get_sample_rate (client) : 0; }
-    int getNumBufferSizesAvailable()            { return client != nullptr ? 1 : 0; }
-    int getBufferSizeSamples (int /*index*/)    { return getDefaultBufferSize(); }
-    int getDefaultBufferSize()                  { return client != nullptr ? juce::jack_get_buffer_size (client) : 0; }
+    StringArray getOutputChannelNames() override         { return getChannelNames (false); }
+    StringArray getInputChannelNames() override          { return getChannelNames (true); }
+
+    Array<double> getAvailableSampleRates() override
+    {
+        Array<double> rates;
+
+        if (client != nullptr)
+            rates.add (juce::jack_get_sample_rate (client));
+
+        return rates;
+    }
+
+    Array<int> getAvailableBufferSizes() override
+    {
+        Array<int> sizes;
+
+        if (client != nullptr)
+            sizes.add (juce::jack_get_buffer_size (client));
+
+        return sizes;
+    }
+
+    int getDefaultBufferSize() override             { return getCurrentBufferSizeSamples(); }
+    int getCurrentBufferSizeSamples() override      { return client != nullptr ? juce::jack_get_buffer_size (client) : 0; }
+    double getCurrentSampleRate() override          { return client != nullptr ? juce::jack_get_sample_rate (client) : 0; }
+
 
     String open (const BigInteger& inputChannels, const BigInteger& outputChannels,
-                 double /* sampleRate */, int /* bufferSizeSamples */)
+                 double /* sampleRate */, int /* bufferSizeSamples */) override
     {
         if (client == nullptr)
         {
@@ -236,7 +255,7 @@ public:
             return lastError;
         }
 
-        lastError = String::empty;
+        lastError.clear();
         close();
 
         juce::jack_set_process_callback (client, processCallback, this);
@@ -274,7 +293,7 @@ public:
         return lastError;
     }
 
-    void close()
+    void close() override
     {
         stop();
 
@@ -289,7 +308,7 @@ public:
         deviceIsOpen = false;
     }
 
-    void start (AudioIODeviceCallback* newCallback)
+    void start (AudioIODeviceCallback* newCallback) override
     {
         if (deviceIsOpen && newCallback != callback)
         {
@@ -308,22 +327,20 @@ public:
         }
     }
 
-    void stop()
+    void stop() override
     {
         start (nullptr);
     }
 
-    bool isOpen()                           { return deviceIsOpen; }
-    bool isPlaying()                        { return callback != nullptr; }
-    int getCurrentBufferSizeSamples()       { return getBufferSizeSamples (0); }
-    double getCurrentSampleRate()           { return getSampleRate (0); }
-    int getCurrentBitDepth()                { return 32; }
-    String getLastError()                   { return lastError; }
+    bool isOpen() override                           { return deviceIsOpen; }
+    bool isPlaying() override                        { return callback != nullptr; }
+    int getCurrentBitDepth() override                { return 32; }
+    String getLastError() override                   { return lastError; }
 
-    BigInteger getActiveOutputChannels() const { return activeOutputChannels; }
-    BigInteger getActiveInputChannels()  const { return activeInputChannels;  }
+    BigInteger getActiveOutputChannels() const override  { return activeOutputChannels; }
+    BigInteger getActiveInputChannels()  const override  { return activeInputChannels;  }
 
-    int getOutputLatencyInSamples()
+    int getOutputLatencyInSamples() override
     {
         int latency = 0;
 
@@ -333,7 +350,7 @@ public:
         return latency;
     }
 
-    int getInputLatencyInSamples()
+    int getInputLatencyInSamples() override
     {
         int latency = 0;
 
@@ -485,13 +502,9 @@ public:
         outputNames.clear();
         outputIds.clear();
 
-        if (juce_libjackHandle == nullptr)
-        {
-            juce_libjackHandle = dlopen ("libjack.so", RTLD_LAZY);
-
-            if (juce_libjackHandle == nullptr)
-                return;
-        }
+        if (juce_libjackHandle == nullptr)  juce_libjackHandle = dlopen ("libjack.so.0", RTLD_LAZY);
+        if (juce_libjackHandle == nullptr)  juce_libjackHandle = dlopen ("libjack.so",   RTLD_LAZY);
+        if (juce_libjackHandle == nullptr)  return;
 
         jack_status_t status;
 

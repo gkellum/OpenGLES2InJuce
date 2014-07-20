@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -151,8 +150,9 @@ private:
             if (JUCEApplicationBase* const app = JUCEApplicationBase::getInstance())
             {
                 StringArray files;
-                for (unsigned int i = 0; i < [filenames count]; ++i)
-                    files.add (quotedIfContainsSpaces ((NSString*) [filenames objectAtIndex: i]));
+
+                for (NSString* f in filenames)
+                    files.add (quotedIfContainsSpaces (f));
 
                 if (files.size() > 0)
                     app->anotherInstanceStarted (files.joinIntoString (" "));
@@ -237,15 +237,32 @@ void MessageManager::runDispatchLoop()
     }
 }
 
-void MessageManager::stopDispatchLoop()
+static void shutdownNSApp()
 {
-    jassert (isThisTheMessageThread()); // must only be called by the message thread
-
-    quitMessagePosted = true;
-   #if ! JUCE_PROJUCER_LIVE_BUILD
     [NSApp stop: nil];
     [NSApp activateIgnoringOtherApps: YES]; // (if the app is inactive, it sits there and ignores the quit request until the next time it gets activated)
-    [NSEvent startPeriodicEventsAfterDelay: 0 withPeriod: 0.1];
+    [NSEvent startPeriodicEventsAfterDelay: 0  withPeriod: 0.1];
+}
+
+void MessageManager::stopDispatchLoop()
+{
+    quitMessagePosted = true;
+
+   #if ! JUCE_PROJUCER_LIVE_BUILD
+    if (isThisTheMessageThread())
+    {
+        shutdownNSApp();
+    }
+    else
+    {
+        struct QuitCallback  : public CallbackMessage
+        {
+            QuitCallback() {}
+            void messageCallback() override   { shutdownNSApp(); }
+        };
+
+        (new QuitCallback())->post();
+    }
    #endif
 }
 
@@ -327,4 +344,24 @@ void MessageManager::broadcastMessage (const String& message)
     [[NSDistributedNotificationCenter defaultCenter] postNotificationName: AppDelegate::getBroacastEventName()
                                                                    object: nil
                                                                  userInfo: info];
+}
+
+// Special function used by some plugin classes to re-post carbon events
+void repostCurrentNSEvent();
+void repostCurrentNSEvent()
+{
+    struct EventReposter  : public CallbackMessage
+    {
+        EventReposter() : e ([[NSApp currentEvent] retain])  {}
+        ~EventReposter()  { [e release]; }
+
+        void messageCallback() override
+        {
+            [NSApp postEvent: e atStart: YES];
+        }
+
+        NSEvent* e;
+    };
+
+    (new EventReposter())->post();
 }

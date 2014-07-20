@@ -1,37 +1,34 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-Label::Label (const String& name,
-              const String& labelText)
+Label::Label (const String& name, const String& labelText)
     : Component (name),
       textValue (labelText),
       lastTextValue (labelText),
       font (15.0f),
       justification (Justification::centredLeft),
-      horizontalBorderSize (5),
-      verticalBorderSize (1),
+      border (1, 5, 1, 5),
       minimumHorizontalScale (0.7f),
       editSingleClick (false),
       editDoubleClick (false),
@@ -116,7 +113,7 @@ void Label::setEditable (const bool editOnSingleClick,
     setFocusContainer (editOnSingleClick || editOnDoubleClick);
 }
 
-void Label::setJustificationType (const Justification& newJustification)
+void Label::setJustificationType (Justification newJustification)
 {
     if (justification != newJustification)
     {
@@ -125,12 +122,11 @@ void Label::setJustificationType (const Justification& newJustification)
     }
 }
 
-void Label::setBorderSize (int h, int v)
+void Label::setBorderSize (BorderSize<int> newBorder)
 {
-    if (horizontalBorderSize != h || verticalBorderSize != v)
+    if (border != newBorder)
     {
-        horizontalBorderSize = h;
-        verticalBorderSize = v;
+        border = newBorder;
         repaint();
     }
 }
@@ -193,7 +189,12 @@ void Label::componentVisibilityChanged (Component& component)
 //==============================================================================
 void Label::textWasEdited() {}
 void Label::textWasChanged() {}
-void Label::editorShown (TextEditor*) {}
+
+void Label::editorShown (TextEditor* textEditor)
+{
+    Component::BailOutChecker checker (this);
+    listeners.callChecked (checker, &LabelListener::editorShown, this, *textEditor);
+}
 
 void Label::editorAboutToBeHidden (TextEditor*)
 {
@@ -327,7 +328,7 @@ void Label::mouseDoubleClick (const MouseEvent& e)
 void Label::resized()
 {
     if (editor != nullptr)
-        editor->setBoundsInset (BorderSize<int> (0));
+        editor->setBounds (getLocalBounds());
 }
 
 void Label::focusGained (FocusChangeType cause)
@@ -448,3 +449,5 @@ void Label::textEditorFocusLost (TextEditor& ed)
 {
     textEditorTextChanged (ed);
 }
+
+void Label::Listener::editorShown (Label*, TextEditor&) {}

@@ -1,32 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the juce_core module of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission to use, copy, modify, and/or distribute this software for any purpose with
+   or without fee is hereby granted, provided that the above copyright notice and this
+   permission notice appear in all copies.
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD
+   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN
+   NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+   DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+   IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+   CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-   JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-   A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+   ------------------------------------------------------------------------------
 
-  ------------------------------------------------------------------------------
+   NOTE! This permissive ISC license applies ONLY to files within the juce_core module!
+   All other JUCE modules are covered by a dual GPL/commercial license, so if you are
+   using any other modules, be sure to check that you also comply with their license.
 
-   To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   For more details, visit www.juce.com
 
   ==============================================================================
 */
 
-#ifndef __JUCE_TIME_JUCEHEADER__
-#define __JUCE_TIME_JUCEHEADER__
-
-#include "juce_RelativeTime.h"
+#ifndef JUCE_TIME_H_INCLUDED
+#define JUCE_TIME_H_INCLUDED
 
 
 //==============================================================================
@@ -252,9 +253,9 @@ public:
 
     //==============================================================================
     /** Adds a RelativeTime to this time. */
-    Time& operator+= (RelativeTime delta);
+    Time& operator+= (RelativeTime delta) noexcept;
     /** Subtracts a RelativeTime from this time. */
-    Time& operator-= (RelativeTime delta);
+    Time& operator-= (RelativeTime delta) noexcept;
 
     //==============================================================================
     /** Tries to set the computer's clock.
@@ -271,8 +272,7 @@ public:
         @param threeLetterVersion   if true, it'll return a 3-letter abbreviation, e.g. "Tue"; if
                                     false, it'll return the full version, e.g. "Tuesday".
     */
-    static String getWeekdayName (int dayNumber,
-                                  bool threeLetterVersion);
+    static String getWeekdayName (int dayNumber, bool threeLetterVersion);
 
     /** Returns the name of one of the months.
 
@@ -280,8 +280,7 @@ public:
         @param threeLetterVersion   if true, it'll be a 3-letter abbreviation, e.g. "Jan"; if false
                                     it'll return the long form, e.g. "January"
     */
-    static String getMonthName (int monthNumber,
-                                bool threeLetterVersion);
+    static String getMonthName (int monthNumber, bool threeLetterVersion);
 
     //==============================================================================
     // Static methods for getting system timers directly..
@@ -369,6 +368,8 @@ public:
     */
     static int64 secondsToHighResolutionTicks (double seconds) noexcept;
 
+    /** Returns a Time based on the value of the __DATE__ macro when this module was compiled */
+    static Time getCompilationDate();
 
 private:
     //==============================================================================
@@ -377,27 +378,27 @@ private:
 
 //==============================================================================
 /** Adds a RelativeTime to a Time. */
-JUCE_API Time operator+ (Time time, RelativeTime delta);
+JUCE_API Time operator+ (Time time, RelativeTime delta) noexcept;
 /** Adds a RelativeTime to a Time. */
-JUCE_API Time operator+ (RelativeTime delta, Time time);
+JUCE_API Time operator+ (RelativeTime delta, Time time) noexcept;
 
 /** Subtracts a RelativeTime from a Time. */
-JUCE_API Time operator- (Time time, RelativeTime delta);
+JUCE_API Time operator- (Time time, RelativeTime delta) noexcept;
 /** Returns the relative time difference between two times. */
-JUCE_API const RelativeTime operator- (Time time1, Time time2);
+JUCE_API const RelativeTime operator- (Time time1, Time time2) noexcept;
 
 /** Compares two Time objects. */
-JUCE_API bool operator== (Time time1, Time time2);
+JUCE_API bool operator== (Time time1, Time time2) noexcept;
 /** Compares two Time objects. */
-JUCE_API bool operator!= (Time time1, Time time2);
+JUCE_API bool operator!= (Time time1, Time time2) noexcept;
 /** Compares two Time objects. */
-JUCE_API bool operator<  (Time time1, Time time2);
+JUCE_API bool operator<  (Time time1, Time time2) noexcept;
 /** Compares two Time objects. */
-JUCE_API bool operator<= (Time time1, Time time2);
+JUCE_API bool operator<= (Time time1, Time time2) noexcept;
 /** Compares two Time objects. */
-JUCE_API bool operator>  (Time time1, Time time2);
+JUCE_API bool operator>  (Time time1, Time time2) noexcept;
 /** Compares two Time objects. */
-JUCE_API bool operator>= (Time time1, Time time2);
+JUCE_API bool operator>= (Time time1, Time time2) noexcept;
 
 
-#endif   // __JUCE_TIME_JUCEHEADER__
+#endif   // JUCE_TIME_H_INCLUDED

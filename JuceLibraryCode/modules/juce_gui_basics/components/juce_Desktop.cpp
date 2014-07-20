@@ -1,34 +1,36 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
 Desktop::Desktop()
-    : mouseClickCounter (0), mouseWheelCounter (0),
+    : mouseSources (new MouseInputSource::SourceList()),
+      mouseClickCounter (0), mouseWheelCounter (0),
       kioskModeComponent (nullptr),
-      allowedOrientations (allOrientations)
+      kioskModeReentrant (false),
+      allowedOrientations (allOrientations),
+      masterScaleFactor ((float) getDefaultMasterScale())
 {
-    addMouseInputSource();
+    displays = new Displays (*this);
 }
 
 Desktop::~Desktop()
@@ -66,6 +68,8 @@ Component* Desktop::getComponent (const int index) const noexcept
 
 Component* Desktop::findComponentAt (Point<int> screenPosition) const
 {
+    ASSERT_MESSAGE_MANAGER_IS_LOCKED
+
     for (int i = desktopComponents.size(); --i >= 0;)
     {
         Component* const c = desktopComponents.getUnchecked(i);
@@ -88,7 +92,7 @@ LookAndFeel& Desktop::getDefaultLookAndFeel() noexcept
     if (currentLookAndFeel == nullptr)
     {
         if (defaultLookAndFeel == nullptr)
-            defaultLookAndFeel = new LookAndFeel();
+            defaultLookAndFeel = new LookAndFeel_V2();
 
         currentLookAndFeel = defaultLookAndFeel;
     }
@@ -98,6 +102,7 @@ LookAndFeel& Desktop::getDefaultLookAndFeel() noexcept
 
 void Desktop::setDefaultLookAndFeel (LookAndFeel* newDefaultLookAndFeel)
 {
+    ASSERT_MESSAGE_MANAGER_IS_LOCKED
     currentLookAndFeel = newDefaultLookAndFeel;
 
     for (int i = getNumComponents(); --i >= 0;)
@@ -144,12 +149,22 @@ void Desktop::componentBroughtToFront (Component* const c)
 //==============================================================================
 Point<int> Desktop::getMousePosition()
 {
+    return getMousePositionFloat().roundToInt();
+}
+
+Point<float> Desktop::getMousePositionFloat()
+{
     return getInstance().getMainMouseSource().getScreenPosition();
+}
+
+void Desktop::setMousePosition (Point<int> newPosition)
+{
+    getInstance().getMainMouseSource().setScreenPosition (newPosition.toFloat());
 }
 
 Point<int> Desktop::getLastMouseDownPosition()
 {
-    return getInstance().getMainMouseSource().getLastMouseDownPosition();
+    return getInstance().getMainMouseSource().getLastMouseDownPosition().roundToInt();
 }
 
 int Desktop::getMouseButtonClickCounter() const noexcept    { return mouseClickCounter; }
@@ -158,96 +173,18 @@ int Desktop::getMouseWheelMoveCounter() const noexcept      { return mouseWheelC
 void Desktop::incrementMouseClickCounter() noexcept         { ++mouseClickCounter; }
 void Desktop::incrementMouseWheelCounter() noexcept         { ++mouseWheelCounter; }
 
-int Desktop::getNumDraggingMouseSources() const noexcept
-{
-    int num = 0;
-    for (int i = mouseSources.size(); --i >= 0;)
-        if (mouseSources.getUnchecked(i)->isDragging())
-            ++num;
-
-    return num;
-}
-
-MouseInputSource* Desktop::getDraggingMouseSource (int index) const noexcept
-{
-    int num = 0;
-    for (int i = mouseSources.size(); --i >= 0;)
-    {
-        MouseInputSource* const mi = mouseSources.getUnchecked(i);
-
-        if (mi->isDragging())
-        {
-            if (index == num)
-                return mi;
-
-            ++num;
-        }
-    }
-
-    return nullptr;
-}
+const Array<MouseInputSource>& Desktop::getMouseSources() const noexcept        { return mouseSources->sourceArray; }
+int Desktop::getNumMouseSources() const noexcept                                { return mouseSources->sources.size(); }
+int Desktop::getNumDraggingMouseSources() const noexcept                        { return mouseSources->getNumDraggingMouseSources(); }
+MouseInputSource* Desktop::getMouseSource (int index) const noexcept            { return mouseSources->getMouseSource (index); }
+MouseInputSource* Desktop::getDraggingMouseSource (int index) const noexcept    { return mouseSources->getDraggingMouseSource (index); }
+MouseInputSource Desktop::getMainMouseSource() const noexcept                   { return MouseInputSource (mouseSources->sources.getUnchecked(0)); }
+void Desktop::beginDragAutoRepeat (int interval)                                { mouseSources->beginDragAutoRepeat (interval); }
 
 //==============================================================================
-class MouseDragAutoRepeater  : public Timer
-{
-public:
-    MouseDragAutoRepeater() {}
-
-    void timerCallback()
-    {
-        Desktop& desktop = Desktop::getInstance();
-        int numMiceDown = 0;
-
-        for (int i = desktop.getNumMouseSources(); --i >= 0;)
-        {
-            MouseInputSource& source = *desktop.getMouseSource(i);
-
-            if (source.isDragging())
-            {
-                source.triggerFakeMove();
-                ++numMiceDown;
-            }
-        }
-
-        if (numMiceDown == 0)
-            desktop.beginDragAutoRepeat (0);
-    }
-
-private:
-    JUCE_DECLARE_NON_COPYABLE (MouseDragAutoRepeater)
-};
-
-void Desktop::beginDragAutoRepeat (const int interval)
-{
-    if (interval > 0)
-    {
-        if (dragRepeater == nullptr)
-            dragRepeater = new MouseDragAutoRepeater();
-
-        if (dragRepeater->getTimerInterval() != interval)
-            dragRepeater->startTimer (interval);
-    }
-    else
-    {
-        dragRepeater = nullptr;
-    }
-}
-
-//==============================================================================
-void Desktop::addFocusChangeListener (FocusChangeListener* const listener)
-{
-    focusListeners.add (listener);
-}
-
-void Desktop::removeFocusChangeListener (FocusChangeListener* const listener)
-{
-    focusListeners.remove (listener);
-}
-
-void Desktop::triggerFocusCallback()
-{
-    triggerAsyncUpdate();
-}
+void Desktop::addFocusChangeListener    (FocusChangeListener* const listener)   { focusListeners.add (listener); }
+void Desktop::removeFocusChangeListener (FocusChangeListener* const listener)   { focusListeners.remove (listener); }
+void Desktop::triggerFocusCallback()                                            { triggerAsyncUpdate(); }
 
 void Desktop::handleAsyncUpdate()
 {
@@ -265,10 +202,10 @@ void Desktop::resetTimer()
     else
         startTimer (100);
 
-    lastFakeMouseMove = getMousePosition();
+    lastFakeMouseMove = getMousePositionFloat();
 }
 
-ListenerList <MouseListener>& Desktop::getMouseListeners()
+ListenerList<MouseListener>& Desktop::getMouseListeners()
 {
     resetTimer();
     return mouseListeners;
@@ -276,19 +213,21 @@ ListenerList <MouseListener>& Desktop::getMouseListeners()
 
 void Desktop::addGlobalMouseListener (MouseListener* const listener)
 {
+    ASSERT_MESSAGE_MANAGER_IS_LOCKED
     mouseListeners.add (listener);
     resetTimer();
 }
 
 void Desktop::removeGlobalMouseListener (MouseListener* const listener)
 {
+    ASSERT_MESSAGE_MANAGER_IS_LOCKED
     mouseListeners.remove (listener);
     resetTimer();
 }
 
 void Desktop::timerCallback()
 {
-    if (lastFakeMouseMove != getMousePosition())
+    if (lastFakeMouseMove != getMousePositionFloat())
         sendMouseMove();
 }
 
@@ -298,12 +237,12 @@ void Desktop::sendMouseMove()
     {
         startTimer (20);
 
-        lastFakeMouseMove = getMousePosition();
+        lastFakeMouseMove = getMousePositionFloat();
 
-        if (Component* const target = findComponentAt (lastFakeMouseMove))
+        if (Component* const target = findComponentAt (lastFakeMouseMove.roundToInt()))
         {
             Component::BailOutChecker checker (target);
-            const Point<int> pos (target->getLocalPoint (nullptr, lastFakeMouseMove));
+            const Point<float> pos (target->getLocalPoint (nullptr, lastFakeMouseMove));
             const Time now (Time::getCurrentTime());
 
             const MouseEvent me (getMainMouseSource(), pos, ModifierKeys::getCurrentModifiers(),
@@ -319,17 +258,19 @@ void Desktop::sendMouseMove()
 
 
 //==============================================================================
-Desktop::Displays::Displays()   { refresh(); }
+Desktop::Displays::Displays (Desktop& desktop)   { init (desktop); }
 Desktop::Displays::~Displays()  {}
 
 const Desktop::Displays::Display& Desktop::Displays::getMainDisplay() const noexcept
 {
+    ASSERT_MESSAGE_MANAGER_IS_LOCKED
     jassert (displays.getReference(0).isMain);
     return displays.getReference(0);
 }
 
 const Desktop::Displays::Display& Desktop::Displays::getDisplayContaining (Point<int> position) const noexcept
 {
+    ASSERT_MESSAGE_MANAGER_IS_LOCKED
     const Display* best = &displays.getReference(0);
     double bestDistance = 1.0e10;
 
@@ -355,9 +296,10 @@ const Desktop::Displays::Display& Desktop::Displays::getDisplayContaining (Point
     return *best;
 }
 
-RectangleList Desktop::Displays::getRectangleList (bool userAreasOnly) const
+RectangleList<int> Desktop::Displays::getRectangleList (bool userAreasOnly) const
 {
-    RectangleList rl;
+    ASSERT_MESSAGE_MANAGER_IS_LOCKED
+    RectangleList<int> rl;
 
     for (int i = 0; i < displays.size(); ++i)
     {
@@ -388,12 +330,18 @@ bool operator!= (const Desktop::Displays::Display& d1, const Desktop::Displays::
     return ! (d1 == d2);
 }
 
+void Desktop::Displays::init (Desktop& desktop)
+{
+    findDisplays (desktop.getGlobalScaleFactor());
+    jassert (displays.size() > 0);
+}
+
 void Desktop::Displays::refresh()
 {
     Array<Display> oldDisplays;
-    oldDisplays.swapWithArray (displays);
+    oldDisplays.swapWith (displays);
 
-    findDisplays();
+    init (Desktop::getInstance());
     jassert (displays.size() > 0);
 
     if (oldDisplays != displays)
@@ -407,16 +355,21 @@ void Desktop::Displays::refresh()
 //==============================================================================
 void Desktop::setKioskModeComponent (Component* componentToUse, const bool allowMenusAndBars)
 {
+    if (kioskModeReentrant)
+        return;
+
+    const ScopedValueSetter<bool> setter (kioskModeReentrant, true, false);
+
     if (kioskModeComponent != componentToUse)
     {
         // agh! Don't delete or remove a component from the desktop while it's still the kiosk component!
         jassert (kioskModeComponent == nullptr || ComponentPeer::getPeerFor (kioskModeComponent) != nullptr);
 
-        if (kioskModeComponent != nullptr)
+        if (Component* const oldKioskComp = kioskModeComponent)
         {
-            setKioskComponent (kioskModeComponent, false, allowMenusAndBars);
-
-            kioskModeComponent->setBounds (kioskComponentOriginalBounds);
+            kioskModeComponent = nullptr; // (to make sure that isKioskMode() returns false when resizing the old one)
+            setKioskComponent (oldKioskComp, false, allowMenusAndBars);
+            oldKioskComp->setBounds (kioskComponentOriginalBounds);
         }
 
         kioskModeComponent = componentToUse;
@@ -427,7 +380,6 @@ void Desktop::setKioskModeComponent (Component* componentToUse, const bool allow
             jassert (ComponentPeer::getPeerFor (kioskModeComponent) != nullptr);
 
             kioskComponentOriginalBounds = kioskModeComponent->getBounds();
-
             setKioskComponent (kioskModeComponent, true, allowMenusAndBars);
         }
     }
@@ -445,7 +397,19 @@ void Desktop::setOrientationsEnabled (const int newOrientations)
 bool Desktop::isOrientationEnabled (const DisplayOrientation orientation) const noexcept
 {
     // Make sure you only pass one valid flag in here...
-    jassert (orientation == upright || orientation == upsideDown || orientation == rotatedClockwise || orientation ==  rotatedAntiClockwise);
+    jassert (orientation == upright || orientation == upsideDown
+              || orientation == rotatedClockwise || orientation == rotatedAntiClockwise);
 
     return (allowedOrientations & orientation) != 0;
+}
+
+void Desktop::setGlobalScaleFactor (float newScaleFactor) noexcept
+{
+    ASSERT_MESSAGE_MANAGER_IS_LOCKED
+
+    if (masterScaleFactor != newScaleFactor)
+    {
+        masterScaleFactor = newScaleFactor;
+        displays->refresh();
+    }
 }

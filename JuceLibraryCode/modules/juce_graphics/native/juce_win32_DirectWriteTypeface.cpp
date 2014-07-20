@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -108,15 +107,9 @@ public:
         systemFonts = nullptr;
     }
 
-    static const Direct2DFactories& getInstance()
-    {
-        static Direct2DFactories instance;
-        return instance;
-    }
-
-    ComSmartPtr <ID2D1Factory> d2dFactory;
-    ComSmartPtr <IDWriteFactory> directWriteFactory;
-    ComSmartPtr <IDWriteFontCollection> systemFonts;
+    ComSmartPtr<ID2D1Factory> d2dFactory;
+    ComSmartPtr<IDWriteFactory> directWriteFactory;
+    ComSmartPtr<IDWriteFontCollection> systemFonts;
 
 private:
     DynamicLibrary direct2dDll, directWriteDll;
@@ -146,44 +139,54 @@ public:
         hr = fontCollection->GetFontFamily (fontIndex, dwFontFamily.resetAndGetPointerAddress());
 
         // Get a specific font in the font family using typeface style
-        ComSmartPtr<IDWriteFont> dwFont;
-        uint32 fontFacesCount = 0;
-        fontFacesCount = dwFontFamily->GetFontCount();
-
-        for (int i = fontFacesCount; --i >= 0;)
         {
-            hr = dwFontFamily->GetFont (i, dwFont.resetAndGetPointerAddress());
+            ComSmartPtr<IDWriteFont> dwFont;
 
-            ComSmartPtr<IDWriteLocalizedStrings> faceNames;
-            hr = dwFont->GetFaceNames (faceNames.resetAndGetPointerAddress());
+            for (int i = (int) dwFontFamily->GetFontCount(); --i >= 0;)
+            {
+                hr = dwFontFamily->GetFont (i, dwFont.resetAndGetPointerAddress());
 
-            if (i == 0 || font.getTypefaceStyle() == getLocalisedName (faceNames))
-                break;
+                if (i == 0)
+                    break;
+
+                ComSmartPtr<IDWriteLocalizedStrings> faceNames;
+                hr = dwFont->GetFaceNames (faceNames.resetAndGetPointerAddress());
+
+                if (font.getTypefaceStyle() == getLocalisedName (faceNames))
+                    break;
+            }
+
+            jassert (dwFont != nullptr);
+            hr = dwFont->CreateFontFace (dwFontFace.resetAndGetPointerAddress());
         }
 
-        hr = dwFont->CreateFontFace (dwFontFace.resetAndGetPointerAddress());
+        if (dwFontFace != nullptr)
+        {
+            DWRITE_FONT_METRICS dwFontMetrics;
+            dwFontFace->GetMetrics (&dwFontMetrics);
 
-        DWRITE_FONT_METRICS dwFontMetrics;
-        dwFontFace->GetMetrics (&dwFontMetrics);
+            // All Font Metrics are in design units so we need to get designUnitsPerEm value
+            // to get the metrics into Em/Design Independent Pixels
+            designUnitsPerEm = dwFontMetrics.designUnitsPerEm;
 
-        // All Font Metrics are in design units so we need to get designUnitsPerEm value
-        // to get the metrics into Em/Design Independent Pixels
-        designUnitsPerEm = dwFontMetrics.designUnitsPerEm;
+            ascent = std::abs ((float) dwFontMetrics.ascent);
+            const float totalSize = ascent + std::abs ((float) dwFontMetrics.descent);
+            ascent /= totalSize;
+            unitsToHeightScaleFactor = designUnitsPerEm / totalSize;
 
-        ascent = std::abs ((float) dwFontMetrics.ascent);
-        const float totalSize = ascent + std::abs ((float) dwFontMetrics.descent);
-        ascent /= totalSize;
-        unitsToHeightScaleFactor = designUnitsPerEm / totalSize;
+            HDC tempDC = GetDC (0);
+            float dpi = (GetDeviceCaps (tempDC, LOGPIXELSX) + GetDeviceCaps (tempDC, LOGPIXELSY)) / 2.0f;
+            heightToPointsFactor = (dpi / GetDeviceCaps (tempDC, LOGPIXELSY)) * unitsToHeightScaleFactor;
+            ReleaseDC (0, tempDC);
 
-        HDC tempDC = GetDC (0);
-        heightToPointsFactor = (72.0f / GetDeviceCaps (tempDC, LOGPIXELSY)) * unitsToHeightScaleFactor;
-        ReleaseDC (0, tempDC);
-
-        const float pathAscent  = (1024.0f * dwFontMetrics.ascent)  / designUnitsPerEm;
-        const float pathDescent = (1024.0f * dwFontMetrics.descent) / designUnitsPerEm;
-        const float pathScale   = 1.0f / (std::abs (pathAscent) + std::abs (pathDescent));
-        pathTransform = AffineTransform::scale (pathScale);
+            const float pathAscent  = (1024.0f * dwFontMetrics.ascent)  / designUnitsPerEm;
+            const float pathDescent = (1024.0f * dwFontMetrics.descent) / designUnitsPerEm;
+            const float pathScale   = 1.0f / (std::abs (pathAscent) + std::abs (pathDescent));
+            pathTransform = AffineTransform::scale (pathScale);
+        }
     }
+
+    bool loadedOk() const noexcept          { return dwFontFace != nullptr; }
 
     float getAscent() const                 { return ascent; }
     float getDescent() const                { return 1.0f - ascent; }
@@ -228,17 +231,6 @@ public:
         }
     }
 
-    EdgeTable* getEdgeTableForGlyph (int glyphNumber, const AffineTransform& transform)
-    {
-        Path path;
-
-        if (getOutlineForGlyph (glyphNumber, path) && ! path.isEmpty())
-            return new EdgeTable (path.getBoundsTransformed (transform).getSmallestIntegerContainer().expanded (1, 0),
-                                  path, transform);
-
-        return nullptr;
-    }
-
     bool getOutlineForGlyph (int glyphNumber, Path& path)
     {
         jassert (path.isEmpty());  // we might need to apply a transform to the path, so this must be empty
@@ -257,6 +249,7 @@ public:
     IDWriteFontFace* getIDWriteFontFace() const noexcept    { return dwFontFace; }
 
 private:
+    SharedResourcePointer<Direct2DFactories> factories;
     ComSmartPtr<IDWriteFontFace> dwFontFace;
     float unitsToHeightScaleFactor, heightToPointsFactor, ascent;
     int designUnitsPerEm;

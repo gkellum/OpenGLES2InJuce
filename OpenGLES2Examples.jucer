@@ -1,93 +1,130 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="WM00Av" name="OpenGLES2Examples" projectType="guiapp" version="1.0.0"
-              bundleIdentifier="com.gregkellum.OpenGLES2Examples" jucerVersion="3.1.0">
+              bundleIdentifier="com.gregkellum.OpenGLES2Examples" jucerVersion="3.1.0"
+              includeBinaryInAppConfig="1">
   <MAINGROUP id="TU1fIy" name="OpenGLES2Examples">
+    <GROUP id="{85940CB6-9FBD-79BF-3420-7A6E50CC2456}" name="Resources">
+      <FILE id="E8kRY5" name="jucelogo96.png" compile="0" resource="1" file="Resources/jucelogo96.png"/>
+    </GROUP>
     <GROUP id="{5D336439-7B37-10CD-D599-7C97A2BDD999}" name="Source">
       <GROUP id="{30E60D7D-1129-BD53-B537-8BABFA292BFB}" name="main">
-        <FILE id="JJah44" name="ApplicationMode.h" compile="0" resource="0"
-              file="Source/main/ApplicationMode.h"/>
-        <FILE id="i9dhBA" name="iOSContentComponent.cpp" compile="1" resource="0"
-              file="Source/main/iOSContentComponent.cpp"/>
-        <FILE id="POmTQR" name="iOSContentComponent.h" compile="0" resource="0"
-              file="Source/main/iOSContentComponent.h"/>
-        <FILE id="EOlMMY" name="iOSMainWindow.cpp" compile="1" resource="0"
-              file="Source/main/iOSMainWindow.cpp"/>
-        <FILE id="V9DzJX" name="iOSMainWindow.h" compile="0" resource="0" file="Source/main/iOSMainWindow.h"/>
-        <FILE id="R9Xdsf" name="iOSModeSelectorToolbar.cpp" compile="1" resource="0"
-              file="Source/main/iOSModeSelectorToolbar.cpp"/>
-        <FILE id="kNVtt9" name="iOSModeSelectorToolbar.h" compile="0" resource="0"
-              file="Source/main/iOSModeSelectorToolbar.h"/>
-        <FILE id="hJK4Kj" name="Main.cpp" compile="1" resource="0" file="Source/main/Main.cpp"/>
-        <FILE id="tFpxeH" name="ResourceManager.cpp" compile="1" resource="0"
-              file="Source/main/ResourceManager.cpp"/>
-        <FILE id="f0SRRd" name="ResourceManager.h" compile="0" resource="0"
-              file="Source/main/ResourceManager.h"/>
+        <FILE id="y2sizA" name="MainWindow.cpp" compile="1" resource="0" file="Source/main/MainWindow.cpp"/>
+        <FILE id="jmxSFj" name="MainWindow.h" compile="0" resource="0" file="Source/main/MainWindow.h"/>
+        <FILE id="OC62YC" name="OpenGLES2ExamplesApplication.cpp" compile="1"
+              resource="0" file="Source/main/OpenGLES2ExamplesApplication.cpp"/>
+        <FILE id="mLWJif" name="OpenGLES2ExamplesApplication.h" compile="0"
+              resource="0" file="Source/main/OpenGLES2ExamplesApplication.h"/>
       </GROUP>
-      <GROUP id="{BA3A3050-F793-67F7-958B-0E35BE7FE325}" name="openGL">
-        <FILE id="WWzFOD" name="SquareComponent.cpp" compile="1" resource="0"
-              file="Source/openGL/SquareComponent.cpp"/>
-        <FILE id="sa4dbn" name="SquareComponent.h" compile="0" resource="0"
-              file="Source/openGL/SquareComponent.h"/>
-        <GROUP id="{A0ABC0E2-B9DE-E386-CCD6-1B23350BC3CB}" name="text">
-          <FILE id="OXDqMP" name="TextToTextureComponent.cpp" compile="1" resource="0"
-                file="Source/openGL/text/TextToTextureComponent.cpp"/>
-          <FILE id="GTXr8F" name="TextToTextureComponent.h" compile="0" resource="0"
-                file="Source/openGL/text/TextToTextureComponent.h"/>
-          <FILE id="u1rrAD" name="TextWithJuceFontAtlasComponent.cpp" compile="1"
-                resource="0" file="Source/openGL/text/TextWithJuceFontAtlasComponent.cpp"/>
-          <FILE id="eJoG8M" name="TextWithJuceFontAtlasComponent.h" compile="0"
-                resource="0" file="Source/openGL/text/TextWithJuceFontAtlasComponent.h"/>
+      <GROUP id="{F082E967-1EDC-3CF4-7415-52021D6DBE0F}" name="model">
+        <FILE id="wcPLUX" name="ApplicationMode.h" compile="0" resource="0"
+              file="Source/model/ApplicationMode.h"/>
+        <FILE id="QYueLF" name="RAIIOpenGLRenderer.h" compile="0" resource="0"
+              file="Source/model/RAIIOpenGLRenderer.h"/>
+        <FILE id="sJHGwc" name="Settings.cpp" compile="1" resource="0" file="Source/model/Settings.cpp"/>
+        <FILE id="AljKiv" name="Settings.h" compile="0" resource="0" file="Source/model/Settings.h"/>
+      </GROUP>
+      <GROUP id="{BBCB32B6-FF4A-3B89-BCC4-EA81FB36E51F}" name="ui">
+        <FILE id="e9MetG" name="ContentComponent.cpp" compile="1" resource="0"
+              file="Source/ui/ContentComponent.cpp"/>
+        <FILE id="ljKaD5" name="ContentComponent.h" compile="0" resource="0"
+              file="Source/ui/ContentComponent.h"/>
+        <FILE id="T3c6ds" name="ModeSelectorToolbar.cpp" compile="1" resource="0"
+              file="Source/ui/ModeSelectorToolbar.cpp"/>
+        <FILE id="YYvm7g" name="ModeSelectorToolbar.h" compile="0" resource="0"
+              file="Source/ui/ModeSelectorToolbar.h"/>
+        <GROUP id="{CC90255D-6B55-D618-B35F-FE52BD4FD9FE}" name="openGL">
+          <FILE id="q39i6b" name="OpenGLIncludes.h" compile="0" resource="0"
+                file="Source/ui/openGL/OpenGLIncludes.h"/>
+          <FILE id="YgpII8" name="SquareComponent.cpp" compile="1" resource="0"
+                file="Source/ui/openGL/SquareComponent.cpp"/>
+          <FILE id="WsAUl4" name="SquareComponent.h" compile="0" resource="0"
+                file="Source/ui/openGL/SquareComponent.h"/>
+          <FILE id="gbFbxB" name="TextToTextureComponent.cpp" compile="1" resource="0"
+                file="Source/ui/openGL/TextToTextureComponent.cpp"/>
+          <FILE id="Y6d89x" name="TextToTextureComponent.h" compile="0" resource="0"
+                file="Source/ui/openGL/TextToTextureComponent.h"/>
+          <FILE id="TaqCYW" name="TexturedComponent.cpp" compile="1" resource="0"
+                file="Source/ui/openGL/TexturedComponent.cpp"/>
+          <FILE id="kMz1vI" name="TexturedComponent.h" compile="0" resource="0"
+                file="Source/ui/openGL/TexturedComponent.h"/>
+          <FILE id="S0bqBw" name="TextWithJuceFontAtlasComponent.cpp" compile="1"
+                resource="0" file="Source/ui/openGL/TextWithJuceFontAtlasComponent.cpp"/>
+          <FILE id="CIbGjQ" name="TextWithJuceFontAtlasComponent.h" compile="0"
+                resource="0" file="Source/ui/openGL/TextWithJuceFontAtlasComponent.h"/>
+          <FILE id="ppbkfW" name="TriangleComponent.cpp" compile="1" resource="0"
+                file="Source/ui/openGL/TriangleComponent.cpp"/>
+          <FILE id="YV50rc" name="TriangleComponent.h" compile="0" resource="0"
+                file="Source/ui/openGL/TriangleComponent.h"/>
         </GROUP>
-        <FILE id="uoYuMT" name="TexturedComponent.cpp" compile="1" resource="0"
-              file="Source/openGL/TexturedComponent.cpp"/>
-        <FILE id="om9OW4" name="TexturedComponent.h" compile="0" resource="0"
-              file="Source/openGL/TexturedComponent.h"/>
-        <FILE id="HFLNx5" name="TexturedCubeComponent.cpp" compile="1" resource="0"
-              file="Source/openGL/TexturedCubeComponent.cpp"/>
-        <FILE id="QM5ytn" name="TexturedCubeComponent.h" compile="0" resource="0"
-              file="Source/openGL/TexturedCubeComponent.h"/>
-        <FILE id="tAUzI8" name="TriangleComponent.cpp" compile="1" resource="0"
-              file="Source/openGL/TriangleComponent.cpp"/>
-        <FILE id="QQb9o6" name="TriangleComponent.h" compile="0" resource="0"
-              file="Source/openGL/TriangleComponent.h"/>
       </GROUP>
     </GROUP>
   </MAINGROUP>
   <MODULES>
-    <MODULE id="juce_core" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_events" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_gui_audio" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_cryptography" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_video" showAllCode="1" useLocalCopy="1"/>
-    <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="1"/>
     <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_cryptography" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_gui_audio" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="1"/>
+    <MODULE id="juce_video" showAllCode="1" useLocalCopy="1"/>
   </MODULES>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="IDE/MacOSX" juceFolder="JuceLibraryCode/modules"
-               extraDefs="OS_MACOSX=1" postbuildCommand="mkdir -p $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH&#10;mkdir -p $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Resources&#10;cp -r ../../Resources/Shaders $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Resources/Shaders&#10;cp -r ../../Resources/Fonts $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Resources/Fonts&#10;cp ../../Resources/*.png $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Resources">
+    <XCODE_MAC targetFolder="IDE/MacOSX" extraDefs="OS_MACOSX=1" postbuildCommand="">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" osxSDK="default" osxCompatibility="default" osxArchitecture="default"
                        isDebug="1" optimisation="1" targetName="OpenGLES2Examples"/>
         <CONFIGURATION name="Release" osxSDK="default" osxCompatibility="default" osxArchitecture="default"
                        isDebug="0" optimisation="2" targetName="OpenGLES2Examples"/>
       </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_video" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_opengl" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_gui_audio" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_graphics" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_events" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_data_structures" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_cryptography" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_core" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="JuceLibraryCode/modules"/>
+      </MODULEPATHS>
     </XCODE_MAC>
-    <XCODE_IPHONE targetFolder="IDE/iOS" juceFolder="JuceLibraryCode/modules" extraDefs="OS_MACIOS=1"
-                  postbuildCommand="cp -r ../../Resources/Shaders/*.vsh $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH&#10;cp -r ../../Resources/Shaders/*.fsh $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH&#10;cp -r ../../Resources/Fonts/*.ttf $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH&#10;cp -r ../../Resources/*.png $TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH&#10;">
+    <XCODE_IPHONE targetFolder="IDE/iOS" extraDefs="OS_MACIOS=1" postbuildCommand=""
+                  UIStatusBarHidden="1">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" iosCompatibility="default" isDebug="1" optimisation="1"
                        targetName="OpenGLES2Examples"/>
         <CONFIGURATION name="Release" iosCompatibility="default" isDebug="0" optimisation="2"
                        targetName="OpenGLES2Examples"/>
       </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_video" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_opengl" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_gui_audio" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_graphics" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_events" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_data_structures" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_cryptography" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_core" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="JuceLibraryCode/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="JuceLibraryCode/modules"/>
+      </MODULEPATHS>
     </XCODE_IPHONE>
   </EXPORTFORMATS>
   <JUCEOPTIONS/>

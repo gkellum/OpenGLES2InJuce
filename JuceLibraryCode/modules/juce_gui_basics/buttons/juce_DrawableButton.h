@@ -1,33 +1,29 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-#ifndef __JUCE_DRAWABLEBUTTON_JUCEHEADER__
-#define __JUCE_DRAWABLEBUTTON_JUCEHEADER__
-
-#include "juce_Button.h"
-#include "../drawables/juce_Drawable.h"
+#ifndef JUCE_DRAWABLEBUTTON_H_INCLUDED
+#define JUCE_DRAWABLEBUTTON_H_INCLUDED
 
 
 //==============================================================================
@@ -116,6 +112,9 @@ public:
     */
     void setButtonStyle (ButtonStyle newStyle);
 
+    /** Returns the current style. */
+    ButtonStyle getStyle() const noexcept       { return style; }
+
     //==============================================================================
     /** Gives the button an optional amount of space around the edge of the drawable.
         By default there's a gap of about 3 pixels.
@@ -132,6 +131,9 @@ public:
     Drawable* getOverImage() const noexcept;
     /** Returns the image that the button will use when the mouse is held down on it. */
     Drawable* getDownImage() const noexcept;
+
+    /** Can be overridden to specify a custom position for the image within the button. */
+    virtual Rectangle<float> getImageBounds() const;
 
     //==============================================================================
     /** A set of colour IDs to use to change the colour of various aspects of the link.
@@ -161,21 +163,21 @@ public:
 
     //==============================================================================
     /** @internal */
-    void paintButton (Graphics&, bool isMouseOverButton, bool isButtonDown);
+    void paintButton (Graphics&, bool isMouseOverButton, bool isButtonDown) override;
     /** @internal */
-    void buttonStateChanged();
+    void buttonStateChanged() override;
     /** @internal */
-    void resized();
+    void resized() override;
     /** @internal */
-    void enablementChanged();
+    void enablementChanged() override;
     /** @internal */
-    void colourChanged();
+    void colourChanged() override;
 
 private:
     //==============================================================================
     ButtonStyle style;
-    ScopedPointer <Drawable> normalImage, overImage, downImage, disabledImage,
-                             normalImageOn, overImageOn, downImageOn, disabledImageOn;
+    ScopedPointer<Drawable> normalImage, overImage, downImage, disabledImage,
+                            normalImageOn, overImageOn, downImageOn, disabledImageOn;
     Drawable* currentImage;
     int edgeIndent;
 
@@ -183,4 +185,4 @@ private:
 };
 
 
-#endif   // __JUCE_DRAWABLEBUTTON_JUCEHEADER__
+#endif   // JUCE_DRAWABLEBUTTON_H_INCLUDED

@@ -1,89 +1,26 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
-
-class SharedValueSourceUpdater  : public ReferenceCountedObject,
-                                  private AsyncUpdater
-{
-public:
-    SharedValueSourceUpdater() : sourcesBeingIterated (nullptr) {}
-    ~SharedValueSourceUpdater()  { masterReference.clear(); }
-
-    void update (Value::ValueSource* const source)
-    {
-        sourcesNeedingAnUpdate.add (source);
-
-        if (sourcesBeingIterated == nullptr)
-            triggerAsyncUpdate();
-    }
-
-    void valueDeleted (Value::ValueSource* const source)
-    {
-        sourcesNeedingAnUpdate.removeValue (source);
-
-        if (sourcesBeingIterated != nullptr)
-            sourcesBeingIterated->removeValue (source);
-    }
-
-    WeakReference<SharedValueSourceUpdater>::Master masterReference;
-
-private:
-    typedef SortedSet<Value::ValueSource*> SourceSet;
-    SourceSet sourcesNeedingAnUpdate;
-    SourceSet* sourcesBeingIterated;
-
-    void handleAsyncUpdate()
-    {
-        const ReferenceCountedObjectPtr<SharedValueSourceUpdater> localRef (this);
-
-        {
-            const ScopedValueSetter<SourceSet*> inside (sourcesBeingIterated, nullptr, nullptr);
-            int maxLoops = 10;
-
-            while (sourcesNeedingAnUpdate.size() > 0)
-            {
-                if (--maxLoops == 0)
-                {
-                    triggerAsyncUpdate();
-                    break;
-                }
-
-                SourceSet sources;
-                sources.swapWith (sourcesNeedingAnUpdate);
-                sourcesBeingIterated = &sources;
-
-                for (int i = sources.size(); --i >= 0;)
-                    if (i < sources.size())
-                        sources.getUnchecked(i)->sendChangeMessage (true);
-            }
-        }
-    }
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SharedValueSourceUpdater)
-};
-
-static WeakReference<SharedValueSourceUpdater> sharedUpdater;
 
 Value::ValueSource::ValueSource()
 {
@@ -91,8 +28,12 @@ Value::ValueSource::ValueSource()
 
 Value::ValueSource::~ValueSource()
 {
-    if (asyncUpdater != nullptr)
-        static_cast <SharedValueSourceUpdater*> (asyncUpdater.get())->valueDeleted (this);
+    cancelPendingUpdate();
+}
+
+void Value::ValueSource::handleAsyncUpdate()
+{
+    sendChangeMessage (true);
 }
 
 void Value::ValueSource::sendChangeMessage (const bool synchronous)
@@ -104,7 +45,8 @@ void Value::ValueSource::sendChangeMessage (const bool synchronous)
         if (synchronous)
         {
             const ReferenceCountedObjectPtr<ValueSource> localRef (this);
-            asyncUpdater = nullptr;
+
+            cancelPendingUpdate();
 
             for (int i = numListeners; --i >= 0;)
                 if (Value* const v = valuesWithListeners[i])
@@ -112,22 +54,7 @@ void Value::ValueSource::sendChangeMessage (const bool synchronous)
         }
         else
         {
-            SharedValueSourceUpdater* updater = static_cast <SharedValueSourceUpdater*> (asyncUpdater.get());
-
-            if (updater == nullptr)
-            {
-                if (sharedUpdater == nullptr)
-                {
-                    asyncUpdater = updater = new SharedValueSourceUpdater();
-                    sharedUpdater = updater;
-                }
-                else
-                {
-                    asyncUpdater = updater = sharedUpdater.get();
-                }
-            }
-
-            updater->update (this);
+            triggerAsyncUpdate();
         }
     }
 }
@@ -196,13 +123,13 @@ Value& Value::operator= (const Value& other)
 
 #if JUCE_COMPILER_SUPPORTS_MOVE_SEMANTICS
 Value::Value (Value&& other) noexcept
-    : value (static_cast <ReferenceCountedObjectPtr <ValueSource>&&> (other.value))
+    : value (static_cast<ReferenceCountedObjectPtr<ValueSource>&&> (other.value))
 {
 }
 
 Value& Value::operator= (Value&& other) noexcept
 {
-    value = static_cast <ReferenceCountedObjectPtr <ValueSource>&&> (other.value);
+    value = static_cast<ReferenceCountedObjectPtr<ValueSource>&&> (other.value);
     return *this;
 }
 #endif

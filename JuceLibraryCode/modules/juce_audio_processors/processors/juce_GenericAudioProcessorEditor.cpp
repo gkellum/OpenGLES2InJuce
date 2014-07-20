@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -28,15 +27,15 @@ class ProcessorParameterPropertyComp   : public PropertyComponent,
                                          private Timer
 {
 public:
-    ProcessorParameterPropertyComp (const String& name, AudioProcessor& p, const int index_)
+    ProcessorParameterPropertyComp (const String& name, AudioProcessor& p, int paramIndex)
         : PropertyComponent (name),
           owner (p),
-          index (index_),
+          index (paramIndex),
           paramHasChanged (false),
-          slider (p, index_)
+          slider (p, paramIndex)
     {
         startTimer (100);
-        addAndMakeVisible (&slider);
+        addAndMakeVisible (slider);
         owner.addListener (this);
     }
 
@@ -45,21 +44,25 @@ public:
         owner.removeListener (this);
     }
 
-    void refresh()
+    void refresh() override
     {
         paramHasChanged = false;
-        slider.setValue (owner.getParameter (index), dontSendNotification);
+
+        if (slider.getThumbBeingDragged() < 0)
+            slider.setValue (owner.getParameter (index), dontSendNotification);
+
+        slider.updateText();
     }
 
-    void audioProcessorChanged (AudioProcessor*)  {}
+    void audioProcessorChanged (AudioProcessor*) override  {}
 
-    void audioProcessorParameterChanged (AudioProcessor*, int parameterIndex, float)
+    void audioProcessorParameterChanged (AudioProcessor*, int parameterIndex, float) override
     {
         if (parameterIndex == index)
             paramHasChanged = true;
     }
 
-    void timerCallback()
+    void timerCallback() override
     {
         if (paramHasChanged)
         {
@@ -77,27 +80,34 @@ private:
     class ParamSlider  : public Slider
     {
     public:
-        ParamSlider (AudioProcessor& p, const int index_)
-            : owner (p),
-              index (index_)
+        ParamSlider (AudioProcessor& p, int paramIndex)  : owner (p), index (paramIndex)
         {
-            setRange (0.0, 1.0, 0.0);
+            const int steps = owner.getParameterNumSteps (index);
+
+            if (steps > 1 && steps < 0x7fffffff)
+                setRange (0.0, 1.0, 1.0 / (steps - 1.0));
+            else
+                setRange (0.0, 1.0);
+
             setSliderStyle (Slider::LinearBar);
             setTextBoxIsEditable (false);
-            setScrollWheelEnabled (false);
+            setScrollWheelEnabled (true);
         }
 
-        void valueChanged()
+        void valueChanged() override
         {
             const float newVal = (float) getValue();
 
             if (owner.getParameter (index) != newVal)
+            {
                 owner.setParameterNotifyingHost (index, newVal);
+                updateText();
+            }
         }
 
-        String getTextFromValue (double /*value*/)
+        String getTextFromValue (double /*value*/) override
         {
-            return owner.getParameterText (index);
+            return owner.getParameterText (index) + " " + owner.getParameterLabel (index).trimEnd();
         }
 
     private:
@@ -124,7 +134,7 @@ GenericAudioProcessorEditor::GenericAudioProcessorEditor (AudioProcessor* const 
     jassert (p != nullptr);
     setOpaque (true);
 
-    addAndMakeVisible (&panel);
+    addAndMakeVisible (panel);
 
     Array <PropertyComponent*> params;
 

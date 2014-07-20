@@ -1,30 +1,29 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-#ifndef __JUCE_RSAKEY_JUCEHEADER__
-#define __JUCE_RSAKEY_JUCEHEADER__
+#ifndef JUCE_RSAKEY_H_INCLUDED
+#define JUCE_RSAKEY_H_INCLUDED
 
 
 //==============================================================================
@@ -33,6 +32,62 @@
 
     An object of this type makes up one half of a public/private RSA key pair. Use the
     createKeyPair() method to create a matching pair for encoding/decoding.
+
+    If you need to use this class in conjunction with a compatible enc/decryption
+    algorithm on a webserver, you can achieve the same thing in PHP like this:
+
+    @code
+    include ('Math/BigInteger.php');  // get this from: phpseclib.sourceforge.net
+
+    function applyToValue ($message, $key_part1, $key_part2)
+    {
+        $result = new Math_BigInteger();
+        $zero  = new Math_BigInteger();
+        $value = new Math_BigInteger (strrev ($message), 256);
+        $part1 = new Math_BigInteger ($key_part1, 16);
+        $part2 = new Math_BigInteger ($key_part2, 16);
+
+        while (! $value->equals ($zero))
+        {
+            $result = $result->multiply ($part2);
+            list ($value, $remainder) = $value->divide ($part2);
+            $result = $result->add ($remainder->modPow ($part1, $part2));
+        }
+
+        return strrev ($result->toBytes());
+    }
+    @endcode
+
+    ..or in Java with something like this:
+
+    @code
+    public class RSAKey
+    {
+        static BigInteger applyToValue (BigInteger value, String key_part1, String key_part2)
+        {
+            BigInteger result = BigInteger.ZERO;
+            BigInteger part1 = new BigInteger (key_part1, 16);
+            BigInteger part2 = new BigInteger (key_part2, 16);
+
+            if (part1.equals (BigInteger.ZERO) || part2.equals (BigInteger.ZERO)
+                 || value.compareTo (BigInteger.ZERO) <= 0)
+                return result;
+
+            while (! value.equals (BigInteger.ZERO))
+            {
+                result = result.multiply (part2);
+                BigInteger[] div = value.divideAndRemainder (part2);
+                value = div[0];
+                result = result.add (div[1].modPow (part1, part2));
+            }
+
+            return result;
+        }
+    }
+    @endcode
+
+    Disclaimer: neither of the code snippets above are tested! Please let me know if you have
+    any corrections for them!
 */
 class JUCE_API  RSAKey
 {
@@ -112,4 +167,4 @@ private:
 };
 
 
-#endif   // __JUCE_RSAKEY_JUCEHEADER__
+#endif   // JUCE_RSAKEY_H_INCLUDED

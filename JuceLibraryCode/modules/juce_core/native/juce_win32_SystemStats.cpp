@@ -1,24 +1,27 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the juce_core module of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission to use, copy, modify, and/or distribute this software for any purpose with
+   or without fee is hereby granted, provided that the above copyright notice and this
+   permission notice appear in all copies.
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD
+   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN
+   NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+   DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+   IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+   CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-   JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-   A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+   ------------------------------------------------------------------------------
 
-  ------------------------------------------------------------------------------
+   NOTE! This permissive ISC license applies ONLY to files within the juce_core module!
+   All other JUCE modules are covered by a dual GPL/commercial license, so if you are
+   using any other modules, be sure to check that you also comply with their license.
 
-   To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   For more details, visit www.juce.com
 
   ==============================================================================
 */
@@ -42,10 +45,46 @@ void Logger::outputDebugString (const String& text)
 #pragma intrinsic (__cpuid)
 #pragma intrinsic (__rdtsc)
 
+static void callCPUID (int result[4], int infoType)
+{
+    __cpuid (result, infoType);
+}
+
+#else
+
+static void callCPUID (int result[4], int infoType)
+{
+   #if ! JUCE_MINGW
+    __try
+   #endif
+    {
+       #if JUCE_GCC
+        __asm__ __volatile__ ("cpuid" : "=a" (result[0]), "=b" (result[1]), "=c" (result[2]),"=d" (result[3]) : "a" (infoType));
+       #else
+        __asm
+        {
+            mov    esi, result
+            mov    eax, infoType
+            xor    ecx, ecx
+            cpuid
+            mov    dword ptr [esi +  0], eax
+            mov    dword ptr [esi +  4], ebx
+            mov    dword ptr [esi +  8], ecx
+            mov    dword ptr [esi + 12], edx
+        }
+       #endif
+    }
+   #if ! JUCE_MINGW
+    __except (EXCEPTION_EXECUTE_HANDLER) {}
+   #endif
+}
+
+#endif
+
 String SystemStats::getCpuVendor()
 {
-    int info [4];
-    __cpuid (info, 0);
+    int info[4] = { 0 };
+    callCPUID (info, 0);
 
     char v [12];
     memcpy (v, info + 1, 4);
@@ -55,62 +94,18 @@ String SystemStats::getCpuVendor()
     return String (v, 12);
 }
 
-#else
-
 //==============================================================================
-// CPU info functions using old fashioned inline asm...
-
-static void juce_getCpuVendor (char* const v)
+void CPUInformation::initialise() noexcept
 {
-    int vendor[4] = { 0 };
+    int info[4] = { 0 };
+    callCPUID (info, 1);
 
-   #if ! JUCE_MINGW
-    __try
-   #endif
-    {
-       #if JUCE_GCC
-        unsigned int dummy = 0;
-        __asm__ ("cpuid" : "=a" (dummy), "=b" (vendor[0]), "=c" (vendor[2]),"=d" (vendor[1]) : "a" (0));
-       #else
-        __asm
-        {
-            mov eax, 0
-            cpuid
-            mov [vendor], ebx
-            mov [vendor + 4], edx
-            mov [vendor + 8], ecx
-        }
-       #endif
-    }
-   #if ! JUCE_MINGW
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
-    }
-   #endif
-
-    memcpy (v, vendor, 16);
-}
-
-String SystemStats::getCpuVendor()
-{
-    char v [16];
-    juce_getCpuVendor (v);
-    return String (v, 16);
-}
-#endif
-
-
-//==============================================================================
-SystemStats::CPUFlags::CPUFlags()
-{
-    hasMMX   = IsProcessorFeaturePresent (PF_MMX_INSTRUCTIONS_AVAILABLE) != 0;
-    hasSSE   = IsProcessorFeaturePresent (PF_XMMI_INSTRUCTIONS_AVAILABLE) != 0;
-    hasSSE2  = IsProcessorFeaturePresent (PF_XMMI64_INSTRUCTIONS_AVAILABLE) != 0;
-   #ifdef PF_AMD3D_INSTRUCTIONS_AVAILABLE
-    has3DNow = IsProcessorFeaturePresent (PF_AMD3D_INSTRUCTIONS_AVAILABLE) != 0;
-   #else
-    has3DNow = IsProcessorFeaturePresent (PF_3DNOW_INSTRUCTIONS_AVAILABLE) != 0;
-   #endif
+    // NB: IsProcessorFeaturePresent doesn't work on XP
+    hasMMX   = (info[3] & (1 << 23)) != 0;
+    hasSSE   = (info[3] & (1 << 25)) != 0;
+    hasSSE2  = (info[3] & (1 << 26)) != 0;
+    hasSSE3  = (info[2] & (1 <<  0)) != 0;
+    has3DNow = (info[1] & (1 << 31)) != 0;
 
     SYSTEM_INFO systemInfo;
     GetNativeSystemInfo (&systemInfo);
@@ -130,31 +125,52 @@ static DebugFlagsInitialiser debugFlagsInitialiser;
 #endif
 
 //==============================================================================
-SystemStats::OperatingSystemType SystemStats::getOperatingSystemType()
+static bool isWindowsVersionOrLater (SystemStats::OperatingSystemType target)
 {
-    OSVERSIONINFO info;
-    info.dwOSVersionInfoSize = sizeof (info);
-    GetVersionEx (&info);
+    OSVERSIONINFOEX info;
+    zerostruct (info);
+    info.dwOSVersionInfoSize = sizeof (OSVERSIONINFOEX);
 
-    if (info.dwPlatformId == VER_PLATFORM_WIN32_NT)
+    if (target >= SystemStats::WinVista)
     {
-        if (info.dwMajorVersion == 5)
-            return (info.dwMinorVersion == 0) ? Win2000 : WinXP;
+        info.dwMajorVersion = 6;
 
-        if (info.dwMajorVersion == 6)
+        switch (target)
         {
-            switch (info.dwMinorVersion)
-            {
-                case 0:  return WinVista;
-                case 1:  return Windows7;
-                case 2:  return Windows8;
-
-                default:
-                    jassertfalse;  // new version needs to be added here!
-                    return Windows8;
-            }
+            case SystemStats::WinVista:    break;
+            case SystemStats::Windows7:    info.dwMinorVersion = 1; break;
+            case SystemStats::Windows8_0:  info.dwMinorVersion = 2; break;
+            case SystemStats::Windows8_1:  info.dwMinorVersion = 3; break;
+            default:                       jassertfalse; break;
         }
     }
+    else
+    {
+        info.dwMajorVersion = 5;
+        info.dwMinorVersion = target >= SystemStats::WinXP ? 1 : 0;
+    }
+
+    DWORDLONG mask = 0;
+
+    VER_SET_CONDITION (mask, VER_MAJORVERSION,     VER_GREATER_EQUAL);
+    VER_SET_CONDITION (mask, VER_MINORVERSION,     VER_GREATER_EQUAL);
+    VER_SET_CONDITION (mask, VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL);
+    VER_SET_CONDITION (mask, VER_SERVICEPACKMINOR, VER_GREATER_EQUAL);
+
+    return VerifyVersionInfo (&info,
+                              VER_MAJORVERSION | VER_MINORVERSION
+                               | VER_SERVICEPACKMAJOR | VER_SERVICEPACKMINOR,
+                              mask) != FALSE;
+}
+
+SystemStats::OperatingSystemType SystemStats::getOperatingSystemType()
+{
+    const SystemStats::OperatingSystemType types[]
+            = { Windows8_1, Windows8_0, Windows7, WinVista, WinXP, Win2000 };
+
+    for (int i = 0; i < numElementsInArray (types); ++i)
+        if (isWindowsVersionOrLater (types[i]))
+            return types[i];
 
     jassertfalse;  // need to support whatever new version is running!
     return UnknownOS;
@@ -166,8 +182,9 @@ String SystemStats::getOperatingSystemName()
 
     switch (getOperatingSystemType())
     {
+        case Windows8_1:        name = "Windows 8.1";       break;
+        case Windows8_0:        name = "Windows 8.0";       break;
         case Windows7:          name = "Windows 7";         break;
-        case Windows8:          name = "Windows 8";         break;
         case WinVista:          name = "Windows Vista";     break;
         case WinXP:             name = "Windows XP";        break;
         case Win2000:           name = "Windows 2000";      break;
@@ -175,6 +192,11 @@ String SystemStats::getOperatingSystemName()
     }
 
     return name;
+}
+
+String SystemStats::getDeviceDescription()
+{
+    return String();
 }
 
 bool SystemStats::isOperatingSystem64Bit()
@@ -231,9 +253,23 @@ public:
     HiResCounterHandler()
         : hiResTicksOffset (0)
     {
-        const MMRESULT res = timeBeginPeriod (1);
+        // This macro allows you to override the default timer-period
+        // used on Windows. By default this is set to 1, because that has
+        // always been the value used in JUCE apps, and changing it could
+        // affect the behaviour of existing code, but you may wish to make
+        // it larger (or set it to 0 to use the system default) to make your
+        // app less demanding on the CPU.
+        // For more info, see win32 documentation about the timeBeginPeriod
+        // function.
+       #ifndef JUCE_WIN32_TIMER_PERIOD
+        #define JUCE_WIN32_TIMER_PERIOD 1
+       #endif
+
+       #if JUCE_WIN32_TIMER_PERIOD > 0
+        const MMRESULT res = timeBeginPeriod (JUCE_WIN32_TIMER_PERIOD);
         (void) res;
         jassert (res == TIMERR_NOERROR);
+       #endif
 
         LARGE_INTEGER f;
         QueryPerformanceFrequency (&f);
@@ -408,8 +444,16 @@ String SystemStats::getDisplayLanguage()
     DynamicLibrary dll ("kernel32.dll");
     JUCE_LOAD_WINAPI_FUNCTION (dll, GetUserDefaultUILanguage, getUserDefaultUILanguage, LANGID, (void))
 
-    if (getUserDefaultUILanguage != nullptr)
-        return getLocaleValue (MAKELCID (getUserDefaultUILanguage(), SORT_DEFAULT), LOCALE_SISO639LANGNAME, "en");
+    if (getUserDefaultUILanguage == nullptr)
+        return "en";
 
-    return "en";
+    const DWORD langID = MAKELCID (getUserDefaultUILanguage(), SORT_DEFAULT);
+
+    String mainLang (getLocaleValue (langID, LOCALE_SISO639LANGNAME, "en"));
+    String region   (getLocaleValue (langID, LOCALE_SISO3166CTRYNAME, nullptr));
+
+    if (region.isNotEmpty())
+        mainLang << '-' << region;
+
+    return mainLang;
 }

@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -81,6 +80,31 @@ void DrawableButton::setEdgeIndent (const int numPixelsIndent)
     resized();
 }
 
+Rectangle<float> DrawableButton::getImageBounds() const
+{
+    Rectangle<int> r (getLocalBounds());
+
+    if (style != ImageStretched)
+    {
+        int indentX = jmin (edgeIndent, proportionOfWidth  (0.3f));
+        int indentY = jmin (edgeIndent, proportionOfHeight (0.3f));
+
+        if (style == ImageOnButtonBackground)
+        {
+            indentX = jmax (getWidth()  / 4, indentX);
+            indentY = jmax (getHeight() / 4, indentY);
+        }
+        else if (style == ImageAboveTextLabel)
+        {
+            r = r.withTrimmedBottom (jmin (16, proportionOfHeight (0.25f)));
+        }
+
+        r = r.reduced (indentX, indentY);
+    }
+
+    return r.toFloat();
+}
+
 void DrawableButton::resized()
 {
     Button::resized();
@@ -88,36 +112,11 @@ void DrawableButton::resized()
     if (currentImage != nullptr)
     {
         if (style == ImageRaw)
-        {
             currentImage->setOriginWithOriginalSize (Point<float>());
-        }
-        else if (style == ImageStretched)
-        {
-            currentImage->setTransformToFit (getLocalBounds().toFloat(), RectanglePlacement::stretchToFit);
-        }
         else
-        {
-            Rectangle<int> imageSpace;
-
-            const int indentX = jmin (edgeIndent, proportionOfWidth  (0.3f));
-            const int indentY = jmin (edgeIndent, proportionOfHeight (0.3f));
-
-            if (style == ImageOnButtonBackground)
-            {
-                imageSpace = getLocalBounds().reduced (jmax (getWidth()  / 4, indentX),
-                                                       jmax (getHeight() / 4, indentY));
-            }
-            else
-            {
-                const int textH = (style == ImageAboveTextLabel) ? jmin (16, proportionOfHeight (0.25f)) : 0;
-
-                imageSpace.setBounds (indentX, indentY,
-                                      getWidth()  - indentX * 2,
-                                      getHeight() - indentY * 2 - textH);
-            }
-
-            currentImage->setTransformToFit (imageSpace.toFloat(), RectanglePlacement::centred);
-        }
+            currentImage->setTransformToFit (getImageBounds(),
+                                             style == ImageStretched ? RectanglePlacement::stretchToFit
+                                                                     : RectanglePlacement::centred);
     }
 }
 
@@ -153,7 +152,7 @@ void DrawableButton::buttonStateChanged()
         {
             currentImage->setInterceptsMouseClicks (false, false);
             addAndMakeVisible (currentImage);
-            DrawableButton::resized();
+            resized();
         }
     }
 
@@ -176,37 +175,15 @@ void DrawableButton::paintButton (Graphics& g,
                                   const bool isMouseOverButton,
                                   const bool isButtonDown)
 {
+    LookAndFeel& lf = getLookAndFeel();
+
     if (style == ImageOnButtonBackground)
-    {
-        getLookAndFeel().drawButtonBackground (g, *this,
-                                               findColour (getToggleState() ? TextButton::buttonOnColourId
-                                                                            : TextButton::buttonColourId),
-                                               isMouseOverButton,
-                                               isButtonDown);
-    }
+        lf.drawButtonBackground (g, *this,
+                                 findColour (getToggleState() ? TextButton::buttonOnColourId
+                                                              : TextButton::buttonColourId),
+                                 isMouseOverButton, isButtonDown);
     else
-    {
-        g.fillAll (findColour (getToggleState() ? backgroundOnColourId
-                                                : backgroundColourId));
-
-        const int textH = (style == ImageAboveTextLabel)
-                            ? jmin (16, proportionOfHeight (0.25f))
-                            : 0;
-
-        if (textH > 0)
-        {
-            g.setFont ((float) textH);
-
-            g.setColour (findColour (getToggleState() ? DrawableButton::textColourOnId
-                                                      : DrawableButton::textColourId)
-                            .withMultipliedAlpha (isEnabled() ? 1.0f : 0.4f));
-
-            g.drawFittedText (getButtonText(),
-                              2, getHeight() - textH - 1,
-                              getWidth() - 4, textH,
-                              Justification::centred, 1);
-        }
-    }
+        lf.drawDrawableButton (g, *this, isMouseOverButton, isButtonDown);
 }
 
 //==============================================================================
@@ -237,7 +214,8 @@ Drawable* DrawableButton::getOverImage() const noexcept
 
 Drawable* DrawableButton::getDownImage() const noexcept
 {
-    Drawable* const d = getToggleState() ? downImageOn : downImage;
+    if (Drawable* const d = getToggleState() ? downImageOn : downImage)
+        return d;
 
-    return d != nullptr ? d : getOverImage();
+    return getOverImage();
 }

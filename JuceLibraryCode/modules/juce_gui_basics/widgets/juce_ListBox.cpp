@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -50,6 +49,8 @@ public:
 
         if (ListBoxModel* m = owner.getModel())
         {
+            setMouseCursor (m->getMouseCursorForRow (row));
+
             customComponent = m->refreshComponentForRow (newRow, nowSelected, customComponent.release());
 
             if (customComponent != nullptr)
@@ -305,12 +306,7 @@ public:
 
     bool keyPressed (const KeyPress& key) override
     {
-        if (key.isKeyCode (KeyPress::upKey)
-            || key.isKeyCode (KeyPress::downKey)
-            || key.isKeyCode (KeyPress::pageUpKey)
-            || key.isKeyCode (KeyPress::pageDownKey)
-            || key.isKeyCode (KeyPress::homeKey)
-            || key.isKeyCode (KeyPress::endKey))
+        if (Viewport::respondsToKey (key))
         {
             const int allowableMods = owner.multipleSelection ? ModifierKeys::shiftModifier : 0;
 
@@ -813,7 +809,7 @@ void ListBox::mouseWheelMove (const MouseEvent& e, const MouseWheelDetails& whee
 void ListBox::mouseUp (const MouseEvent& e)
 {
     if (e.mouseWasClicked() && model != nullptr)
-        model->backgroundClicked();
+        model->backgroundClicked (e);
 }
 
 //==============================================================================
@@ -907,10 +903,8 @@ Image ListBox::createSnapshotOfSelectedRows (int& imageX, int& imageY)
 
         if (rowComp != nullptr && isRowSelected (firstRow + i))
         {
-            const Point<int> pos (getLocalPoint (rowComp, Point<int>()));
-
             Graphics g (snapshot);
-            g.setOrigin (pos.getX() - imageX, pos.getY() - imageY);
+            g.setOrigin (getLocalPoint (rowComp, Point<int>()) - imageArea.getPosition());
 
             if (g.reduceClipRegion (rowComp->getLocalBounds()))
             {
@@ -953,10 +947,11 @@ Component* ListBoxModel::refreshComponentForRow (int, bool, Component* existingC
 
 void ListBoxModel::listBoxItemClicked (int, const MouseEvent&) {}
 void ListBoxModel::listBoxItemDoubleClicked (int, const MouseEvent&) {}
-void ListBoxModel::backgroundClicked() {}
+void ListBoxModel::backgroundClicked (const MouseEvent&) {}
 void ListBoxModel::selectedRowsChanged (int) {}
 void ListBoxModel::deleteKeyPressed (int) {}
 void ListBoxModel::returnKeyPressed (int) {}
 void ListBoxModel::listWasScrolled() {}
-var ListBoxModel::getDragSourceDescription (const SparseSet<int>&)      { return var::null; }
+var ListBoxModel::getDragSourceDescription (const SparseSet<int>&)      { return var(); }
 String ListBoxModel::getTooltipForRow (int)                             { return String::empty; }
+MouseCursor ListBoxModel::getMouseCursorForRow (int)                    { return MouseCursor::NormalCursor; }

@@ -1,30 +1,30 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-#ifndef __JUCE_MD5_JUCEHEADER__
-#define __JUCE_MD5_JUCEHEADER__
+#ifndef JUCE_MD5_H_INCLUDED
+#define JUCE_MD5_H_INCLUDED
+
 
 //==============================================================================
 /**
@@ -44,14 +44,14 @@ public:
     MD5() noexcept;
 
     /** Creates a copy of another MD5. */
-    MD5 (const MD5& other) noexcept;
+    MD5 (const MD5&) noexcept;
 
     /** Copies another MD5. */
-    MD5& operator= (const MD5& other) noexcept;
+    MD5& operator= (const MD5&) noexcept;
 
     //==============================================================================
     /** Creates a checksum for a block of binary data. */
-    explicit MD5 (const MemoryBlock& data) noexcept;
+    explicit MD5 (const MemoryBlock&) noexcept;
 
     /** Creates a checksum for a block of binary data. */
     MD5 (const void* data, size_t numBytes) noexcept;
@@ -64,10 +64,10 @@ public:
     */
     MD5 (InputStream& input, int64 numBytesToRead = -1);
 
-    /** Creates a checksum for a file. */
-    explicit MD5 (const File& file);
+    /** Creates a checksum for the contents of a file. */
+    explicit MD5 (const File&);
 
-    /** Creates a checksum from a UTF-8 buffer.
+    /** Creates a checksum of the characters in a UTF-8 buffer.
         E.g.
         @code MD5 checksum (myString.toUTF8());
         @endcode
@@ -94,7 +94,7 @@ public:
         this operation on it. In new code, you shouldn't use this, and are recommended to
         use the constructor that takes a CharPointer_UTF8 instead.
     */
-    static MD5 fromUTF32 (const String&);
+    static MD5 fromUTF32 (StringRef);
 
     //==============================================================================
     bool operator== (const MD5&) const noexcept;
@@ -108,8 +108,12 @@ private:
     void processData (const void*, size_t) noexcept;
     void processStream (InputStream&, int64);
 
+    // This private constructor is declared here to prevent you accidentally passing a
+    // String and having it unexpectedly call the constructor that takes a File.
+    explicit MD5 (const String&) JUCE_DELETED_FUNCTION;
+
     JUCE_LEAK_DETECTOR (MD5)
 };
 
 
-#endif   // __JUCE_MD5_JUCEHEADER__
+#endif   // JUCE_MD5_H_INCLUDED

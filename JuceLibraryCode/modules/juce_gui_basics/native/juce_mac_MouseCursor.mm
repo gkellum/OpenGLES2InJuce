@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -28,6 +27,7 @@
 //==============================================================================
 namespace MouseCursorHelpers
 {
+    NSImage* createNSImage (const Image&);
     NSImage* createNSImage (const Image& image)
     {
         JUCE_AUTORELEASEPOOL
@@ -52,17 +52,21 @@ namespace MouseCursorHelpers
 
     static void* fromWebKitFile (const char* filename, float hx, float hy)
     {
-        FileInputStream fileStream (String ("/System/Library/Frameworks/WebKit.framework/Frameworks/WebCore.framework/Resources/") + filename);
-        BufferedInputStream buf (fileStream, 4096);
+        FileInputStream fileStream (File ("/System/Library/Frameworks/WebKit.framework/Frameworks/WebCore.framework/Resources")
+                                        .getChildFile (filename));
 
-        PNGImageFormat pngFormat;
-        Image im (pngFormat.decodeImage (buf));
+        if (fileStream.openedOk())
+        {
+            BufferedInputStream buf (fileStream, 4096);
 
-        if (im.isValid())
-            return CustomMouseCursorInfo (im, (int) (hx * im.getWidth()),
-                                              (int) (hy * im.getHeight())).create();
+            PNGImageFormat pngFormat;
+            Image im (pngFormat.decodeImage (buf));
 
-        jassertfalse;
+            if (im.isValid())
+                return CustomMouseCursorInfo (im, (int) (hx * im.getWidth()),
+                                                  (int) (hy * im.getHeight())).create();
+        }
+
         return nullptr;
     }
 }
@@ -91,16 +95,31 @@ void* MouseCursor::createStandardMouseCursor (MouseCursor::StandardCursorType ty
             case WaitCursor:            c = [NSCursor arrowCursor]; break; // avoid this on the mac, let the OS provide the beachball
             case IBeamCursor:           c = [NSCursor IBeamCursor]; break;
             case PointingHandCursor:    c = [NSCursor pointingHandCursor]; break;
-            case LeftRightResizeCursor: c = [NSCursor resizeLeftRightCursor]; break;
             case LeftEdgeResizeCursor:  c = [NSCursor resizeLeftCursor]; break;
             case RightEdgeResizeCursor: c = [NSCursor resizeRightCursor]; break;
             case CrosshairCursor:       c = [NSCursor crosshairCursor]; break;
-            case CopyingCursor:         return MouseCursorHelpers::fromWebKitFile ("copyCursor.png", 0, 0);
+
+            case CopyingCursor:
+            {
+               #if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_6
+                if (void* m = MouseCursorHelpers::fromWebKitFile ("copyCursor.png", 0, 0))
+                    return m;
+               #endif
+                c = [NSCursor dragCopyCursor]; // added in 10.6
+                break;
+            }
 
             case UpDownResizeCursor:
             case TopEdgeResizeCursor:
             case BottomEdgeResizeCursor:
                 return MouseCursorHelpers::fromWebKitFile ("northSouthResizeCursor.png", 0.5f, 0.5f);
+
+            case LeftRightResizeCursor:
+                if (void* m = MouseCursorHelpers::fromWebKitFile ("eastWestResizeCursor.png", 0.5f, 0.5f))
+                    return m;
+
+                c = [NSCursor resizeLeftRightCursor];
+                break;
 
             case TopLeftCornerResizeCursor:
             case BottomRightCornerResizeCursor:
@@ -146,8 +165,8 @@ void MouseCursor::showInWindow (ComponentPeer*) const
 #else
 
 void* CustomMouseCursorInfo::create() const                                              { return nullptr; }
-void* MouseCursor::createStandardMouseCursor (MouseCursor::StandardCursorType type)      { return nullptr; }
-void MouseCursor::deleteMouseCursor (void* const cursorHandle, const bool isStandard)    {}
+void* MouseCursor::createStandardMouseCursor (MouseCursor::StandardCursorType)           { return nullptr; }
+void MouseCursor::deleteMouseCursor (void*, bool)                                        {}
 void MouseCursor::showInAllWindows() const                                               {}
 void MouseCursor::showInWindow (ComponentPeer*) const                                    {}
 

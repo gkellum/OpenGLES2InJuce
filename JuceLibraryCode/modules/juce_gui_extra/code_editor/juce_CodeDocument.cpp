@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -26,20 +25,21 @@
 class CodeDocumentLine
 {
 public:
-    CodeDocumentLine (const String::CharPointerType& l,
+    CodeDocumentLine (const String::CharPointerType startOfLine,
+                      const String::CharPointerType endOfLine,
                       const int lineLen,
                       const int numNewLineChars,
                       const int startInFile)
-        : line (l, (size_t) lineLen),
+        : line (startOfLine, endOfLine),
           lineStartInFile (startInFile),
           lineLength (lineLen),
           lineLengthWithoutNewLines (lineLen - numNewLineChars)
     {
     }
 
-    static void createLines (Array <CodeDocumentLine*>& newLines, const String& text)
+    static void createLines (Array<CodeDocumentLine*>& newLines, StringRef text)
     {
-        String::CharPointerType t (text.getCharPointer());
+        String::CharPointerType t (text.text);
         int charNumInFile = 0;
         bool finished = false;
 
@@ -85,7 +85,7 @@ public:
                 }
             }
 
-            newLines.add (new CodeDocumentLine (startOfLine, lineLength,
+            newLines.add (new CodeDocumentLine (startOfLine, t, lineLength,
                                                 numNewLineChars, startOfLineInFile));
         }
 
@@ -165,18 +165,20 @@ juce_wchar CodeDocument::Iterator::nextChar() noexcept
                 return 0;
         }
 
-        const juce_wchar result = charPointer.getAndAdvance();
+        if (const juce_wchar result = charPointer.getAndAdvance())
+        {
+            if (charPointer.isEmpty())
+            {
+                ++line;
+                charPointer = nullptr;
+            }
 
-        if (result == 0)
-        {
-            ++line;
-            charPointer = nullptr;
-        }
-        else
-        {
             ++position;
             return result;
         }
+
+        ++line;
+        charPointer = nullptr;
     }
 }
 
@@ -212,9 +214,7 @@ juce_wchar CodeDocument::Iterator::peekNextChar() const noexcept
             return 0;
     }
 
-    const juce_wchar c = *charPointer;
-
-    if (c != 0)
+    if (const juce_wchar c = *charPointer)
         return c;
 
     if (const CodeDocumentLine* const l = document->lines [line + 1])
@@ -523,7 +523,7 @@ String CodeDocument::getTextBetween (const Position& start, const Position& end)
         }
     }
 
-    return mo.toString();
+    return mo.toUTF8();
 }
 
 int CodeDocument::getNumCharacters() const noexcept
@@ -577,16 +577,14 @@ void CodeDocument::insertText (const int insertIndex, const String& text)
 
 void CodeDocument::replaceSection (const int start, const int end, const String& newText)
 {
-    insertText (start, newText);
-    const int newTextLen = newText.length();
-    deleteSection (start + newTextLen, end + newTextLen);
+    insertText (end, newText);
+    deleteSection (start, end);
 }
 
 void CodeDocument::applyChanges (const String& newContent)
 {
-    StringArray correctedLines;
-    correctedLines.addLines (newContent);
-    const String corrected (correctedLines.joinIntoString (newLineChars));
+    const String corrected (StringArray::fromLines (newContent)
+                                .joinIntoString (newLineChars));
 
     TextDiff diff (getAllContent(), corrected);
 
@@ -793,7 +791,8 @@ void CodeDocument::checkLastLineStatus()
     if (lastLine != nullptr && lastLine->endsWithLineBreak())
     {
         // check that there's an empty line at the end if the preceding one ends in a newline..
-        lines.add (new CodeDocumentLine (String::empty.getCharPointer(), 0, 0, lastLine->lineStartInFile + lastLine->lineLength));
+        lines.add (new CodeDocumentLine (StringRef(), StringRef(), 0, 0,
+                                         lastLine->lineStartInFile + lastLine->lineLength));
     }
 }
 

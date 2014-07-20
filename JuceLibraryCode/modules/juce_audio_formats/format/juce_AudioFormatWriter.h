@@ -1,32 +1,29 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
 
-#ifndef __JUCE_AUDIOFORMATWRITER_JUCEHEADER__
-#define __JUCE_AUDIOFORMATWRITER_JUCEHEADER__
-
-#include "juce_AudioFormatReader.h"
+#ifndef JUCE_AUDIOFORMATWRITER_H_INCLUDED
+#define JUCE_AUDIOFORMATWRITER_H_INCLUDED
 
 
 //==============================================================================
@@ -94,8 +91,18 @@ public:
                                 to pass it into the method.
         @param numSamples       the number of samples to write
     */
-    virtual bool write (const int** samplesToWrite,
-                        int numSamples) = 0;
+    virtual bool write (const int** samplesToWrite, int numSamples) = 0;
+
+    /** Some formats may support a flush operation that makes sure the file is in a
+        valid state before carrying on.
+        If supported, this means that by calling flush periodically when writing data
+        to a large file, then it should still be left in a readable state if your program
+        crashes.
+        It goes without saying that this method must be called from the same thread that's
+        calling write()!
+        If the format supports flushing and the operation succeeds, this returns true.
+    */
+    virtual bool flush();
 
     //==============================================================================
     /** Reads a section of samples from an AudioFormatReader, and writes these to
@@ -131,7 +138,7 @@ public:
                                      int startSample, int numSamples);
 
     /** Writes some samples from a set of float data channels. */
-    bool writeFromFloatArrays (const float** channels, int numChannels, int numSamples);
+    bool writeFromFloatArrays (const float* const* channels, int numChannels, int numSamples);
 
     //==============================================================================
     /** Returns the sample rate being used. */
@@ -180,7 +187,7 @@ public:
             The data must be an array containing the same number of channels as the
             AudioFormatWriter object is using. None of these channels can be null.
         */
-        bool write (const float** data, int numSamples);
+        bool write (const float* const* data, int numSamples);
 
         class JUCE_API  IncomingDataReceiver
         {
@@ -200,11 +207,16 @@ public:
 
             The object passed-in must not be deleted while this writer is still using it.
         */
-        void setDataReceiver (IncomingDataReceiver* receiver);
+        void setDataReceiver (IncomingDataReceiver*);
+
+        /** Sets how many samples should be written before calling the AudioFormatWriter::flush method.
+            Set this to 0 to disable flushing (this is the default).
+        */
+        void setFlushInterval (int numSamplesPerFlush) noexcept;
 
     private:
         class Buffer;
-        friend class ScopedPointer<Buffer>;
+        friend struct ContainerDeletePolicy<Buffer>;
         ScopedPointer<Buffer> buffer;
     };
 
@@ -232,7 +244,7 @@ protected:
         typedef AudioData::Pointer <DestSampleType, DestEndianness, AudioData::Interleaved, AudioData::NonConst>                DestType;
         typedef AudioData::Pointer <SourceSampleType, AudioData::NativeEndian, AudioData::NonInterleaved, AudioData::Const>     SourceType;
 
-        static void write (void* destData, int numDestChannels, const int** source,
+        static void write (void* destData, int numDestChannels, const int* const* source,
                            int numSamples, const int sourceOffset = 0) noexcept
         {
             for (int i = 0; i < numDestChannels; ++i)
@@ -259,4 +271,4 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioFormatWriter)
 };
 
-#endif   // __JUCE_AUDIOFORMATWRITER_JUCEHEADER__
+#endif   // JUCE_AUDIOFORMATWRITER_H_INCLUDED

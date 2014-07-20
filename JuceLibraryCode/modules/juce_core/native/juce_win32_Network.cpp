@@ -1,24 +1,27 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the juce_core module of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission to use, copy, modify, and/or distribute this software for any purpose with
+   or without fee is hereby granted, provided that the above copyright notice and this
+   permission notice appear in all copies.
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD
+   TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN
+   NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+   DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+   IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+   CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-   JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
-   WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
-   A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+   ------------------------------------------------------------------------------
 
-  ------------------------------------------------------------------------------
+   NOTE! This permissive ISC license applies ONLY to files within the juce_core module!
+   All other JUCE modules are covered by a dual GPL/commercial license, so if you are
+   using any other modules, be sure to check that you also comply with their license.
 
-   To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   For more details, visit www.juce.com
 
   ==============================================================================
 */
@@ -38,41 +41,50 @@ public:
     WebInputStream (const String& address_, bool isPost_, const MemoryBlock& postData_,
                     URL::OpenStreamProgressCallback* progressCallback, void* progressCallbackContext,
                     const String& headers_, int timeOutMs_, StringPairArray* responseHeaders)
-      : connection (0), request (0),
+      : statusCode (0), connection (0), request (0),
         address (address_), headers (headers_), postData (postData_), position (0),
         finished (false), isPost (isPost_), timeOutMs (timeOutMs_)
     {
         createConnection (progressCallback, progressCallbackContext);
 
-        if (responseHeaders != nullptr && ! isError())
+        if (! isError())
         {
-            DWORD bufferSizeBytes = 4096;
-
-            for (;;)
+            if (responseHeaders != nullptr)
             {
-                HeapBlock<char> buffer ((size_t) bufferSizeBytes);
+                DWORD bufferSizeBytes = 4096;
 
-                if (HttpQueryInfo (request, HTTP_QUERY_RAW_HEADERS_CRLF, buffer.getData(), &bufferSizeBytes, 0))
+                for (;;)
                 {
-                    StringArray headersArray;
-                    headersArray.addLines (reinterpret_cast <const WCHAR*> (buffer.getData()));
+                    HeapBlock<char> buffer ((size_t) bufferSizeBytes);
 
-                    for (int i = 0; i < headersArray.size(); ++i)
+                    if (HttpQueryInfo (request, HTTP_QUERY_RAW_HEADERS_CRLF, buffer.getData(), &bufferSizeBytes, 0))
                     {
-                        const String& header = headersArray[i];
-                        const String key (header.upToFirstOccurrenceOf (": ", false, false));
-                        const String value (header.fromFirstOccurrenceOf (": ", false, false));
-                        const String previousValue ((*responseHeaders) [key]);
+                        StringArray headersArray;
+                        headersArray.addLines (String (reinterpret_cast<const WCHAR*> (buffer.getData())));
 
-                        responseHeaders->set (key, previousValue.isEmpty() ? value : (previousValue + "," + value));
+                        for (int i = 0; i < headersArray.size(); ++i)
+                        {
+                            const String& header = headersArray[i];
+                            const String key (header.upToFirstOccurrenceOf (": ", false, false));
+                            const String value (header.fromFirstOccurrenceOf (": ", false, false));
+                            const String previousValue ((*responseHeaders) [key]);
+
+                            responseHeaders->set (key, previousValue.isEmpty() ? value : (previousValue + "," + value));
+                        }
+
+                        break;
                     }
 
-                    break;
+                    if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+                        break;
                 }
-
-                if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-                    break;
             }
+
+            DWORD status = 0;
+            DWORD statusSize = sizeof (status);
+
+            if (HttpQueryInfo (request, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status, &statusSize, 0))
+                statusCode = (int) status;
         }
     }
 
@@ -141,6 +153,8 @@ public:
 
         return true;
     }
+
+    int statusCode;
 
 private:
     //==============================================================================
@@ -245,7 +259,8 @@ private:
     {
         const TCHAR* mimeTypes[] = { _T("*/*"), nullptr };
 
-        DWORD flags = INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_COOKIES;
+        DWORD flags = INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_COOKIES
+                        | INTERNET_FLAG_NO_AUTO_REDIRECT | SECURITY_SET_MASK;
 
         if (address.startsWithIgnoreCase ("https:"))
             flags |= INTERNET_FLAG_SECURE;  // (this flag only seems necessary if the OS is running IE6 -
@@ -256,6 +271,8 @@ private:
 
         if (request != 0)
         {
+            setSecurityFlags();
+
             INTERNET_BUFFERS buffers = { 0 };
             buffers.dwStructSize = sizeof (INTERNET_BUFFERS);
             buffers.lpcszHeader = headers.toWideCharPointer();
@@ -273,7 +290,7 @@ private:
 
                     if (bytesToDo > 0
                          && ! InternetWriteFile (request,
-                                                 static_cast <const char*> (postData.getData()) + bytesSent,
+                                                 static_cast<const char*> (postData.getData()) + bytesSent,
                                                  (DWORD) bytesToDo, &bytesDone))
                     {
                         break;
@@ -299,19 +316,16 @@ private:
         close();
     }
 
+    void setSecurityFlags()
+    {
+        DWORD dwFlags = 0, dwBuffLen = sizeof (DWORD);
+        InternetQueryOption (request, INTERNET_OPTION_SECURITY_FLAGS, &dwFlags, &dwBuffLen);
+        dwFlags |= SECURITY_FLAG_IGNORE_UNKNOWN_CA | SECURITY_SET_MASK;
+        InternetSetOption (request, INTERNET_OPTION_SECURITY_FLAGS, &dwFlags, sizeof (dwFlags));
+    }
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (WebInputStream)
 };
-
-InputStream* URL::createNativeStream (const String& address, bool isPost, const MemoryBlock& postData,
-                                      OpenStreamProgressCallback* progressCallback, void* progressCallbackContext,
-                                      const String& headers, const int timeOutMs, StringPairArray* responseHeaders)
-{
-    ScopedPointer <WebInputStream> wi (new WebInputStream (address, isPost, postData,
-                                                           progressCallback, progressCallbackContext,
-                                                           headers, timeOutMs, responseHeaders));
-
-    return wi->isError() ? nullptr : wi.release();
-}
 
 
 //==============================================================================
@@ -339,7 +353,13 @@ struct GetAdaptersInfoHelper
 
 namespace MACAddressHelpers
 {
-    void getViaGetAdaptersInfo (Array<MACAddress>& result)
+    static void addAddress (Array<MACAddress>& result, const MACAddress& ma)
+    {
+        if (! ma.isNull())
+            result.addIfNotAlreadyThere (ma);
+    }
+
+    static void getViaGetAdaptersInfo (Array<MACAddress>& result)
     {
         GetAdaptersInfoHelper gah;
 
@@ -347,11 +367,11 @@ namespace MACAddressHelpers
         {
             for (PIP_ADAPTER_INFO adapter = gah.adapterInfo; adapter != nullptr; adapter = adapter->Next)
                 if (adapter->AddressLength >= 6)
-                    result.addIfNotAlreadyThere (MACAddress (adapter->Address));
+                    addAddress (result, MACAddress (adapter->Address));
         }
     }
 
-    void getViaNetBios (Array<MACAddress>& result)
+    static void getViaNetBios (Array<MACAddress>& result)
     {
         DynamicLibrary dll ("netapi32.dll");
         JUCE_LOAD_WINAPI_FUNCTION (dll, Netbios, NetbiosCall, UCHAR, (PNCB))
@@ -393,7 +413,7 @@ namespace MACAddressHelpers
                     ncb.ncb_length = sizeof (ASTAT);
 
                     if (NetbiosCall (&ncb) == 0 && astat.adapt.adapter_type == 0xfe)
-                        result.addIfNotAlreadyThere (MACAddress (astat.adapt.adapter_address));
+                        addAddress (result, MACAddress (astat.adapt.adapter_address));
                 }
             }
         }
@@ -425,10 +445,10 @@ void IPAddress::findAllAddresses (Array<IPAddress>& result)
 }
 
 //==============================================================================
-bool Process::openEmailWithAttachments (const String& targetEmailAddress,
-                                        const String& emailSubject,
-                                        const String& bodyText,
-                                        const StringArray& filesToAttach)
+bool JUCE_CALLTYPE Process::openEmailWithAttachments (const String& targetEmailAddress,
+                                                      const String& emailSubject,
+                                                      const String& bodyText,
+                                                      const StringArray& filesToAttach)
 {
     DynamicLibrary dll ("MAPI32.dll");
     JUCE_LOAD_WINAPI_FUNCTION (dll, MAPISendMail, mapiSendMail,

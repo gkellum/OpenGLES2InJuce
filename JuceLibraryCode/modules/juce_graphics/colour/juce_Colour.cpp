@@ -1,24 +1,23 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library - "Jules' Utility Class Extensions"
-   Copyright 2004-11 by Raw Material Software Ltd.
+   This file is part of the JUCE library.
+   Copyright (c) 2013 - Raw Material Software Ltd.
 
-  ------------------------------------------------------------------------------
+   Permission is granted to use this software under the terms of either:
+   a) the GPL v2 (or any later version)
+   b) the Affero GPL v3
 
-   JUCE can be redistributed and/or modified under the terms of the GNU General
-   Public License (Version 2), as published by the Free Software Foundation.
-   A copy of the license is included in the JUCE distribution, or can be found
-   online at www.gnu.org/licenses.
+   Details of these licenses can be found at: www.gnu.org/licenses
 
    JUCE is distributed in the hope that it will be useful, but WITHOUT ANY
    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
    A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-  ------------------------------------------------------------------------------
+   ------------------------------------------------------------------------------
 
    To release a closed-source product which uses JUCE, commercial licenses are
-   available: visit www.rawmaterialsoftware.com/juce for more information.
+   available: visit www.juce.com for more information.
 
   ==============================================================================
 */
@@ -27,20 +26,7 @@ namespace ColourHelpers
 {
     static uint8 floatToUInt8 (const float n) noexcept
     {
-        return n <= 0.0f ? 0 : (n >= 1.0f ? 255 : (uint8) (n * 255.0f));
-    }
-
-    // This is an adjusted brightness value, based on the way the human
-    // eye responds to different colour channels..
-    static float getPerceivedBrightness (Colour c) noexcept
-    {
-        const float r = c.getFloatRed();
-        const float g = c.getFloatGreen();
-        const float b = c.getFloatBlue();
-
-        return std::sqrt (r * r * 0.241f
-                           + g * g * 0.691f
-                           + b * b * 0.068f);
+        return n <= 0.0f ? 0 : (n >= 1.0f ? 255 : static_cast<uint8> (n * 255.996f));
     }
 
     //==============================================================================
@@ -169,8 +155,7 @@ bool Colour::operator== (const Colour& other) const noexcept    { return argb.ge
 bool Colour::operator!= (const Colour& other) const noexcept    { return argb.getARGB() != other.argb.getARGB(); }
 
 //==============================================================================
-Colour::Colour (const uint32 argb_) noexcept
-    : argb (argb_)
+Colour::Colour (const uint32 col) noexcept  : argb (col)
 {
 }
 
@@ -335,6 +320,13 @@ Colour Colour::withHue (float h) const noexcept          { ColourHelpers::HSB hs
 Colour Colour::withSaturation (float s) const noexcept   { ColourHelpers::HSB hsb (*this); hsb.saturation = s; return hsb.toColour (*this); }
 Colour Colour::withBrightness (float v) const noexcept   { ColourHelpers::HSB hsb (*this); hsb.brightness = v; return hsb.toColour (*this); }
 
+float Colour::getPerceivedBrightness() const noexcept
+{
+    return std::sqrt (0.241f * square (getFloatRed())
+                    + 0.691f * square (getFloatGreen())
+                    + 0.068f * square (getFloatBlue()));
+}
+
 //==============================================================================
 Colour Colour::withRotatedHue (const float amountToRotate) const noexcept
 {
@@ -388,9 +380,9 @@ Colour Colour::greyLevel (const float brightness) noexcept
 //==============================================================================
 Colour Colour::contrasting (const float amount) const noexcept
 {
-   return overlaidWith ((ColourHelpers::getPerceivedBrightness (*this) >= 0.5f
-                            ? Colours::black
-                            : Colours::white).withAlpha (amount));
+   return overlaidWith ((getPerceivedBrightness() >= 0.5f
+                           ? Colours::black
+                           : Colours::white).withAlpha (amount));
 }
 
 Colour Colour::contrasting (Colour target, float minContrast) const noexcept
@@ -411,8 +403,8 @@ Colour Colour::contrasting (Colour target, float minContrast) const noexcept
 Colour Colour::contrasting (Colour colour1,
                             Colour colour2) noexcept
 {
-    const float b1 = ColourHelpers::getPerceivedBrightness (colour1);
-    const float b2 = ColourHelpers::getPerceivedBrightness (colour2);
+    const float b1 = colour1.getPerceivedBrightness();
+    const float b2 = colour2.getPerceivedBrightness();
     float best = 0.0f;
     float bestDist = 0.0f;
 
@@ -439,9 +431,9 @@ String Colour::toString() const
     return String::toHexString ((int) argb.getARGB());
 }
 
-Colour Colour::fromString (const String& encodedColourString)
+Colour Colour::fromString (StringRef encodedColourString)
 {
-    return Colour ((uint32) encodedColourString.getHexValue32());
+    return Colour ((uint32) CharacterFunctions::HexParser<int>::parse (encodedColourString.text));
 }
 
 String Colour::toDisplayString (const bool includeAlphaValue) const
