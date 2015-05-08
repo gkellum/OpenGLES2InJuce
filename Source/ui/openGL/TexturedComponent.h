@@ -17,9 +17,9 @@ public:
 
     void renderOpenGL();
 
-private:
-    GLuint createTextureForImageFile(char *fileName);
+    static GLuint createTextureForImageFile(char *fileName);
 
+private:
     RAIIOpenGLRenderer raiiOpenGLRenderer;
     bool initialized;
 

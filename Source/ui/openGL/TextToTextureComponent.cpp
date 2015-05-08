@@ -89,21 +89,21 @@ void TextToTextureComponent::newOpenGLContextCreated()
     bool succeeded = shaderProgram->addShader((const char*) vertexShader.toUTF8(), GL_VERTEX_SHADER);
     if (!succeeded)
     {
-        jassertfalse
+        jassertfalse;
         return;
     }
 
     succeeded = shaderProgram->addShader((const char*) fragmentShader.toUTF8(), GL_FRAGMENT_SHADER);
     if (!succeeded)
     {
-        jassertfalse
+        jassertfalse;
         return;
     }
 
     succeeded = shaderProgram->link();
     if (!succeeded)
     {
-        jassertfalse
+        jassertfalse;
         return;
     }
 

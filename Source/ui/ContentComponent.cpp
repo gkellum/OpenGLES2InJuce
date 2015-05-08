@@ -3,6 +3,7 @@
 #include "Settings.h"
 #include "TriangleComponent.h"
 #include "SquareComponent.h"
+#include "PointSpriteComponent.h"
 #include "TexturedComponent.h"
 #include "TextToTextureComponent.h"
 #include "TextWithJuceFontAtlasComponent.h"
@@ -49,6 +50,10 @@ void ContentComponent::modeSelected(ApplicationMode::ID mode)
 
     case ApplicationMode::Square:
         activeScreen = new SquareComponent();
+        break;
+
+    case ApplicationMode::Points:
+        activeScreen = new PointSpriteComponent();
         break;
 
     case ApplicationMode::Texture:

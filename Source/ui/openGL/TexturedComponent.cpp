@@ -19,9 +19,11 @@ TexturedComponent::~TexturedComponent()
 
 GLuint TexturedComponent::createTextureForImageFile( char *fileName )
 {
-    Image juceLogoImage = ImageCache::getFromMemory(BinaryData::jucelogo96_png, BinaryData::jucelogo96_pngSize);
+    int dataSizeInBytes = 0;
+    const char* imageData = BinaryData::getNamedResource(fileName, dataSizeInBytes);
+    Image image = ImageCache::getFromMemory(imageData, dataSizeInBytes);
 
-    if ( juceLogoImage == Image::null )
+    if ( image == Image::null )
     {
         printf( "Error loading (%s) image.\n", fileName );
         return 0;
@@ -32,9 +34,9 @@ GLuint TexturedComponent::createTextureForImageFile( char *fileName )
     glGenTextures ( 1, &textureId );
     glBindTexture ( GL_TEXTURE_2D, textureId );
 
-    Image::BitmapData juceLogoBitmapData(juceLogoImage, 0, 0, juceLogoImage.getWidth(), juceLogoImage.getHeight(), Image::BitmapData::readOnly);
+    Image::BitmapData juceLogoBitmapData(image, 0, 0, image.getWidth(), image.getHeight(), Image::BitmapData::readOnly);
 
-    glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA, juceLogoImage.getWidth(), juceLogoImage.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, juceLogoBitmapData.data );
+    glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA, image.getWidth(), image.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, juceLogoBitmapData.data );
     glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
     glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
     glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
@@ -73,21 +75,21 @@ void TexturedComponent::newOpenGLContextCreated()
     bool succeeded = shaderProgram->addShader((const char*) vertexShader.toUTF8(), GL_VERTEX_SHADER);
     if (!succeeded)
     {
-        jassertfalse
+        jassertfalse;
         return;
     }
 
     succeeded = shaderProgram->addShader((const char*) fragmentShader.toUTF8(), GL_FRAGMENT_SHADER);
     if (!succeeded)
     {
-        jassertfalse
+        jassertfalse;
         return;
     }
 
     succeeded = shaderProgram->link();
     if (!succeeded)
     {
-        jassertfalse
+        jassertfalse;
         return;
     }
 
@@ -96,7 +98,7 @@ void TexturedComponent::newOpenGLContextCreated()
 
     samplerLocationUniform = new OpenGLShaderProgram::Uniform(*shaderProgram, "s_texture");
 
-    juceLogoTextureId = createTextureForImageFile("jucelogo96.png");
+    juceLogoTextureId = createTextureForImageFile("jucelogo96_png");
 }
 
 void TexturedComponent::openGLContextClosing()

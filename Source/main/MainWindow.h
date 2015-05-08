@@ -17,35 +17,18 @@ class ContentComponent;
 
 //==============================================================================
 class MainWindow : public DocumentWindow
-                 , public Timer
 {
 public:
     //==============================================================================
     MainWindow();
     ~MainWindow();
 
-    void resized();
+    ContentComponent* getContentComponent();
 
     void closeButtonPressed();
 
-    ContentComponent* getContentComponent();
-
-    /* Note: Be careful when overriding DocumentWindow methods - the base class
-       uses a lot of them, so by overriding you might break its functionality.
-       It's best to do all your work in you content component instead, but if
-       you really have to override any DocumentWindow methods, make sure your
-       implementation calls the superclass's method.
-    */
-
-    static const int StatusBarHeight = 20;
-
-    static bool isPortraitOrientation();
-
 private:
-    void timerCallback();
-    void createUI();
-
-    ScopedPointer<ContentComponent> contentComponent;
+    SafePointer<ContentComponent> contentComponent;
 
     bool resizingWindow;
 

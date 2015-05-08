@@ -62,7 +62,7 @@ namespace AudioUnitFormatHelpers
     static ThreadLocalValue<int> insideCallback;
    #endif
 
-    String osTypeToString (OSType type)
+    String osTypeToString (OSType type) noexcept
     {
         const juce_wchar s[4] = { (juce_wchar) ((type >> 24) & 0xff),
                                   (juce_wchar) ((type >> 16) & 0xff),
@@ -88,9 +88,6 @@ namespace AudioUnitFormatHelpers
 
     String createPluginIdentifier (const AudioComponentDescription& desc)
     {
-        jassert (osTypeToString ('abcd') == "abcd"); // agh, must have got the endianness wrong..
-        jassert (stringToOSType ("abcd") == (OSType) 'abcd'); // ditto
-
         String s (auIdentifierPrefix);
 
         if (desc.componentType == kAudioUnitType_MusicDevice)
@@ -215,9 +212,11 @@ namespace AudioUnitFormatHelpers
                 const short resFileId = CFBundleOpenBundleResourceMap (bundleRef);
                 UseResFile (resFileId);
 
-                for (ResourceIndex i = 1; i <= Count1Resources ('thng'); ++i)
+                const OSType thngType = stringToOSType ("thng");
+
+                for (ResourceIndex i = 1; i <= Count1Resources (thngType); ++i)
                 {
-                    if (Handle h = Get1IndResource ('thng', i))
+                    if (Handle h = Get1IndResource (thngType, i))
                     {
                         HLock (h);
                         const uint32* const types = (const uint32*) *h;
@@ -346,11 +345,21 @@ public:
         refreshParameterList();
         updateNumChannels();
         producesMidiMessages = canProduceMidiOutput();
-        setPluginCallbacks();
         setPlayConfigDetails (numInputBusChannels * numInputBusses,
                               numOutputBusChannels * numOutputBusses,
                               rate, blockSize);
         setLatencySamples (0);
+
+        if (parameters.size() == 0)
+        {
+            // some plugins crash if initialiseAudioUnit() is called too soon (sigh..), so we'll
+            // only call it here if it seems like they it's one of the awkward plugins that can
+            // only create their parameters after it has been initialised.
+            initialiseAudioUnit();
+            refreshParameterList();
+        }
+
+        setPluginCallbacks();
     }
 
     //==============================================================================
