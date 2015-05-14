@@ -69,6 +69,15 @@ public:
         mat[12] = m03;  mat[13] = m13;  mat[14] = m23;  mat[15] = m33;
     }
 
+    /** Creates a matrix from a 3D vector translation. */
+    Matrix3D (Vector3D<Type> vector) noexcept
+    {
+        mat[0]  = (Type) 1; mat[1]  = 0;        mat[2]  = 0;         mat[3]  = 0;
+        mat[4]  = 0;        mat[5]  = (Type) 1; mat[6]  = 0;         mat[7]  = 0;
+        mat[8]  = 0;        mat[9]  = 0;        mat[10] = (Type) 1;  mat[11] = 0;
+        mat[12] = vector.x; mat[13] = vector.y; mat[14] = vector.z;  mat[15] = (Type) 1;
+    }
+
     /** Creates a matrix from an array of 16 raw values. */
     Matrix3D (const Type* values) noexcept
     {
@@ -82,15 +91,6 @@ public:
         mat[4]  = transform.mat01;  mat[5] =  transform.mat11;  mat[6]  = 0;         mat[7]  = 0;
         mat[8]  = 0;                mat[9] =  0;                mat[10] = (Type) 1;  mat[11] = 0;
         mat[12] = transform.mat02;  mat[13] = transform.mat12;  mat[14] = 0;         mat[15] = (Type) 1;
-    }
-
-    /** Creates a matrix from a 3D vector translation. */
-    Matrix3D (Vector3D<Type> vector) noexcept
-    {
-        mat[0]  = (Type) 1; mat[1]  = 0;        mat[2]  = 0;         mat[3]  = 0;
-        mat[4]  = 0;        mat[5]  = (Type) 1; mat[6]  = 0;         mat[7]  = 0;
-        mat[8]  = 0;        mat[9]  = 0;        mat[10] = (Type) 1;  mat[11] = 0;
-        mat[12] = vector.x; mat[13] = vector.y; mat[14] = vector.z;  mat[15] = (Type) 1;
     }
 
     /** Returns a new matrix from the given frustrum values. */

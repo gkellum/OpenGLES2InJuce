@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="WM00Av" name="OpenGLES2Examples" projectType="guiapp" version="1.0.0"
-              bundleIdentifier="com.gregkellum.OpenGLES2Examples" jucerVersion="3.1.0"
+              bundleIdentifier="com.gregkellum.OpenGLES2Examples" jucerVersion="3.1.1"
               includeBinaryInAppConfig="1">
   <MAINGROUP id="TU1fIy" name="OpenGLES2Examples">
     <GROUP id="{85940CB6-9FBD-79BF-3420-7A6E50CC2456}" name="Resources">
+      <FILE id="ijzLW6" name="droplet.png" compile="0" resource="1" file="Resources/droplet.png"/>
       <FILE id="E8kRY5" name="jucelogo96.png" compile="0" resource="1" file="Resources/jucelogo96.png"/>
     </GROUP>
     <GROUP id="{5D336439-7B37-10CD-D599-7C97A2BDD999}" name="Source">
@@ -34,8 +35,48 @@
         <FILE id="YYvm7g" name="ModeSelectorToolbar.h" compile="0" resource="0"
               file="Source/ui/ModeSelectorToolbar.h"/>
         <GROUP id="{CC90255D-6B55-D618-B35F-FE52BD4FD9FE}" name="openGL">
+          <GROUP id="{86998E9A-6CC3-C511-D374-11ED4E5E564F}" name="xyzAxes">
+            <FILE id="mtJbdA" name="BoundingBox.cpp" compile="1" resource="0" file="Source/ui/openGL/xyzAxes/BoundingBox.cpp"/>
+            <FILE id="mlqEB0" name="BoundingBox.h" compile="0" resource="0" file="Source/ui/openGL/xyzAxes/BoundingBox.h"/>
+            <FILE id="NKJcYh" name="Dimension.h" compile="0" resource="0" file="Source/ui/openGL/xyzAxes/Dimension.h"/>
+            <FILE id="k2hpqx" name="GraphicObject.cpp" compile="1" resource="0"
+                  file="Source/ui/openGL/xyzAxes/GraphicObject.cpp"/>
+            <FILE id="Q2t4xR" name="GraphicObject.h" compile="0" resource="0" file="Source/ui/openGL/xyzAxes/GraphicObject.h"/>
+            <FILE id="DjGXkK" name="LineSegmentBuilder.h" compile="0" resource="0"
+                  file="Source/ui/openGL/xyzAxes/LineSegmentBuilder.h"/>
+            <FILE id="MzU7BH" name="MatrixClasses.cpp" compile="1" resource="0"
+                  file="Source/ui/openGL/xyzAxes/MatrixClasses.cpp"/>
+            <FILE id="jh5aWz" name="MatrixClasses.h" compile="0" resource="0" file="Source/ui/openGL/xyzAxes/MatrixClasses.h"/>
+            <FILE id="yAyAx7" name="MatrixUtil.cpp" compile="1" resource="0" file="Source/ui/openGL/xyzAxes/MatrixUtil.cpp"/>
+            <FILE id="uqrurf" name="MatrixUtil.h" compile="0" resource="0" file="Source/ui/openGL/xyzAxes/MatrixUtil.h"/>
+            <FILE id="LZ0lza" name="RenderingProperties.cpp" compile="1" resource="0"
+                  file="Source/ui/openGL/xyzAxes/RenderingProperties.cpp"/>
+            <FILE id="BWGX4v" name="RenderingProperties.h" compile="0" resource="0"
+                  file="Source/ui/openGL/xyzAxes/RenderingProperties.h"/>
+            <FILE id="FgVsnk" name="ShaderBasedVertexRenderer.h" compile="0" resource="0"
+                  file="Source/ui/openGL/xyzAxes/ShaderBasedVertexRenderer.h"/>
+            <FILE id="Y3yzOL" name="SimpleColorShader.h" compile="0" resource="0"
+                  file="Source/ui/openGL/xyzAxes/SimpleColorShader.h"/>
+            <FILE id="OiX5HZ" name="ShaderUniforms.h" compile="0" resource="0"
+                  file="Source/ui/openGL/xyzAxes/ShaderUniforms.h"/>
+            <FILE id="FqVgQJ" name="TextureBuilder.h" compile="0" resource="0"
+                  file="Source/ui/openGL/xyzAxes/TextureBuilder.h"/>
+            <FILE id="x5yJjm" name="TextureShader.h" compile="0" resource="0" file="Source/ui/openGL/xyzAxes/TextureShader.h"/>
+            <FILE id="IYiZp5" name="VectorClasses.h" compile="0" resource="0" file="Source/ui/openGL/xyzAxes/VectorClasses.h"/>
+            <FILE id="DqXAM9" name="VertexAttributes.h" compile="0" resource="0"
+                  file="Source/ui/openGL/xyzAxes/VertexAttributes.h"/>
+            <FILE id="SPLkSO" name="VertexBuffer.cpp" compile="1" resource="0"
+                  file="Source/ui/openGL/xyzAxes/VertexBuffer.cpp"/>
+            <FILE id="daiW66" name="VertexBuffer.h" compile="0" resource="0" file="Source/ui/openGL/xyzAxes/VertexBuffer.h"/>
+            <FILE id="lILrHR" name="VertexRenderer.h" compile="0" resource="0"
+                  file="Source/ui/openGL/xyzAxes/VertexRenderer.h"/>
+          </GROUP>
           <FILE id="q39i6b" name="OpenGLIncludes.h" compile="0" resource="0"
                 file="Source/ui/openGL/OpenGLIncludes.h"/>
+          <FILE id="JRJPE5" name="PointSpriteComponent.cpp" compile="1" resource="0"
+                file="Source/ui/openGL/PointSpriteComponent.cpp"/>
+          <FILE id="JgVT3b" name="PointSpriteComponent.h" compile="0" resource="0"
+                file="Source/ui/openGL/PointSpriteComponent.h"/>
           <FILE id="YgpII8" name="SquareComponent.cpp" compile="1" resource="0"
                 file="Source/ui/openGL/SquareComponent.cpp"/>
           <FILE id="WsAUl4" name="SquareComponent.h" compile="0" resource="0"
@@ -56,6 +97,10 @@
                 file="Source/ui/openGL/TriangleComponent.cpp"/>
           <FILE id="YV50rc" name="TriangleComponent.h" compile="0" resource="0"
                 file="Source/ui/openGL/TriangleComponent.h"/>
+          <FILE id="HzHA1Q" name="XYZAxesComponent.cpp" compile="1" resource="0"
+                file="Source/ui/openGL/XYZAxesComponent.cpp"/>
+          <FILE id="LIyICa" name="XYZAxesComponent.h" compile="0" resource="0"
+                file="Source/ui/openGL/XYZAxesComponent.h"/>
         </GROUP>
       </GROUP>
     </GROUP>

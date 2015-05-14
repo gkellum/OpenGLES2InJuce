@@ -25,7 +25,7 @@ void PointSpriteComponent::newOpenGLContextCreated()
     //std::cerr << "Point sprite radius range (" << pointSizeRange[0] << ", " << pointSizeRange[1] << ")" << std::endl;
     // Outputs: Point sprite radius range (1, 511)
     
-    const float pixelToPointMultiplier = 0.59f;
+    //const float pixelToPointMultiplier = 0.59f;
 
     shaderProgram = new OpenGLShaderProgram(Settings::getInstance().getOpenGLContext());
 

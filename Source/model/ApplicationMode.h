@@ -14,6 +14,7 @@ public:
         ,Texture
         ,TextRenderedToImage
         ,TextRenderedFromFontAtlas
+        ,XYZAxes
         ,NumberOfApplicationModes
     };
 
@@ -27,6 +28,7 @@ public:
         case Texture: return "Texture";
         case TextRenderedToImage: return "Text Var#1";
         case TextRenderedFromFontAtlas: return "Text Var#2";
+        case XYZAxes: return "XYZ Axes";
         default:
             jassertfalse;
             return String::empty;

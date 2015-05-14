@@ -7,6 +7,7 @@
 #include "TexturedComponent.h"
 #include "TextToTextureComponent.h"
 #include "TextWithJuceFontAtlasComponent.h"
+#include "XYZAxesComponent.h"
 
 #if OS_MACIOS
   #include <OpenGLES/ES1/gl.h>
@@ -66,6 +67,10 @@ void ContentComponent::modeSelected(ApplicationMode::ID mode)
 
     case ApplicationMode::TextRenderedFromFontAtlas:
        activeScreen = new TextWithJuceFontAtlasComponent();
+       break;
+
+    case ApplicationMode::XYZAxes:
+       activeScreen = new XYZAxesComponent();
        break;
 
     default:
