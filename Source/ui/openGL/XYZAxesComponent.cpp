@@ -30,8 +30,8 @@ void XYZAxesComponent::mouseDrag(const MouseEvent& event)
 {
     c4::Matrix4D translatedViewMatrix(viewMatrixAtMouseDown);
 
-    translatedViewMatrix.n[0][0] += float(event.getDistanceFromDragStartX()) / getWidth();
-    translatedViewMatrix.n[1][1] += -float(event.getDistanceFromDragStartY()) / getHeight();
+    translatedViewMatrix.n[0][3] += float(event.getDistanceFromDragStartX()) / getWidth();
+    translatedViewMatrix.n[1][3] += -float(event.getDistanceFromDragStartY()) / getHeight();
 
     //std::cerr << "XYZAxesComponent::mouseDrag; new translation (" << translatedViewMatrix.n[12] << ", " << translatedViewMatrix.n[13] << ")" << std::endl;
     renderingProperties->setViewMatrix(translatedViewMatrix);
@@ -44,7 +44,7 @@ void XYZAxesComponent::mouseDrag(const MouseEvent& event)
 void XYZAxesComponent::mouseMagnify(const MouseEvent &event, float scaleFactor)
 {
     c4::Matrix4D translatedViewMatrix(renderingProperties->getViewMatrix());
-    translatedViewMatrix.n[0][2] += scaleFactor - 1;
+    translatedViewMatrix.n[2][3] += scaleFactor - 1;
     //std::cerr << "XYZAxesComponent::mouseDrag; scaleFactor (" << scaleFactor << ") new translation (" << translatedViewMatrix.n[14] << ")" << std::endl;
     renderingProperties->setViewMatrix(translatedViewMatrix);
 
