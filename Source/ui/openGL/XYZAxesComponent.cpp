@@ -60,61 +60,85 @@ void XYZAxesComponent::newOpenGLContextCreated()
     createAxesAndPositionLabelsForCameraPosition();
 }
 
-// bool operator==(const c4::Vector3D& lhs, const c4::Vector3D& rhs)
-// {
-//     return     fabs(lhs.x - rhs.x) < 0.01f
-//             && fabs(lhs.y - rhs.y) < 0.01f
-//             && fabs(lhs.z - rhs.z) < 0.01f;
-// }
+bool didModelTranslationChangeSignificantly(const c4::Vector4D& currentTranslation,
+                                            const c4::Vector4D& newTranslation)
+{
+    return fabs(currentTranslation.x - newTranslation.x) > 0.01f
+            || fabs(currentTranslation.y - newTranslation.y) > 0.01f
+            || fabs(currentTranslation.z - newTranslation.z) > 0.01f;
+}
 
-// bool operator!=(const c4::Vector3D& lhs, const c4::Vector3D& rhs)
-// {
-//     return !(lhs == rhs);
-// }
+
 
 void XYZAxesComponent::createAxesAndPositionLabelsForCameraPosition()
 {
-    c4::Matrix4D viewMatrix( renderingProperties->getViewMatrix() );
-    c4::Vector4D origin( viewMatrix.getRow(3) );
+    c4::Vector4D idealCameraPositionRelativeToModel(0, 0, -15, 1);
+    c4::Vector4D currentCameraPositionRelativeToModel( renderingProperties->getViewMatrix().getRow(3) );
+    c4::Vector4D phaseAlignedModelTranslation = currentCameraPositionRelativeToModel - idealCameraPositionRelativeToModel;
 
-    origin.x = roundf( origin.x / 5.0f ) * 5.0f;
-    origin.y = roundf( origin.y / 5.0f ) * 5.0f;
-    origin.z = roundf( origin.z / 5.0f ) * 5.0f;
+    phaseAlignedModelTranslation.x = -roundf( phaseAlignedModelTranslation.x / 5.0f ) * 5.0f;
+    phaseAlignedModelTranslation.y = -roundf( phaseAlignedModelTranslation.y / 5.0f ) * 5.0f;
+    phaseAlignedModelTranslation.z = -roundf( phaseAlignedModelTranslation.z / 5.0f ) * 5.0f;
+    phaseAlignedModelTranslation.w = 1;
 
-
-    bool nearestXAxisChanged = xAxis == nullptr || xAxis->getBoundingBox().getCenter() != origin;
-    if (nearestXAxisChanged)
+    bool nearestXAxisChanged = false;
+    if (xAxis == nullptr)
     {
         xAxis = LineSegmentBuilder::createLineSegment(openGLContext,
-                                                       std::tuple<float, float, float>(-10, 0, 0),
-                                                       std::tuple<float, float, float>(10, 0, 0),
-                                                       Colours::red,
-                                                       c4::Matrix4D(c4::Vector3D(0, 0, 0)));
+                                                      std::tuple<float, float, float>(-10, 0, 0),
+                                                      std::tuple<float, float, float>(10, 0, 0),
+                                                      Colours::red,
+                                                      c4::Matrix4D(c4::Vector3D(0, 0, 0)));
+        nearestXAxisChanged = true;
+    }
+    else if ( didModelTranslationChangeSignificantly(phaseAlignedModelTranslation, 
+                                                     xAxis->getModelTransformation().getRow(3)) )
+    {
+        xAxis->setModelTransformation( c4::Matrix4D( phaseAlignedModelTranslation ) );
+        nearestXAxisChanged = true;
     }
 
-    bool nearestYAxisChanged = yAxis == nullptr || yAxis->getBoundingBox().getCenter() != origin;
-    if (nearestYAxisChanged)
+    bool nearestYAxisChanged = false;
+    if (yAxis == nullptr)
     {
         yAxis = LineSegmentBuilder::createLineSegment(openGLContext,
                                                        std::tuple<float, float, float>(0, -10, 0),
                                                        std::tuple<float, float, float>(0, 10, 0),
                                                        Colours::green,
                                                        c4::Matrix4D(c4::Vector3D(0, 0, 0)));
+        nearestYAxisChanged = true;
+    }
+    else if ( didModelTranslationChangeSignificantly(phaseAlignedModelTranslation, 
+                                                     yAxis->getModelTransformation().getRow(3)) )
+    {
+        yAxis->setModelTransformation( c4::Matrix4D( phaseAlignedModelTranslation ) );
+        nearestYAxisChanged = true;
     }
 
-    bool nearestZAxisChanged = zAxis == nullptr || zAxis->getBoundingBox().getCenter() != origin;
+    bool nearestZAxisChanged = false; 
+    if (zAxis == nullptr)
     {
         zAxis = LineSegmentBuilder::createLineSegment(openGLContext,
                                                        std::tuple<float, float, float>(0, 0, -100),
                                                        std::tuple<float, float, float>(0, 0, 100),
                                                        Colours::blue,
                                                        c4::Matrix4D(c4::Vector3D(0, 0, 0)));
+        nearestZAxisChanged = true;
+    }
+    else if ( didModelTranslationChangeSignificantly(phaseAlignedModelTranslation, 
+                                                     zAxis->getModelTransformation().getRow(3)) )
+    {
+        zAxis->setModelTransformation( c4::Matrix4D( phaseAlignedModelTranslation ) );
+        nearestZAxisChanged = true;
     }
 
+    /*
     if (nearestXAxisChanged || nearestYAxisChanged || nearestZAxisChanged)
     {
         std::cerr << "xAxisChanged <" << nearestXAxisChanged << "> yAxisChanged <" << nearestYAxisChanged << "> zAxisChanged <" << nearestZAxisChanged << ">" << std::endl;
-        std::cerr << "origin (" << origin.x << ", " << origin.y << ", " << origin.z << ")" << std::endl;
+        std::cerr << "phaseAlignedModelTranslation (" << phaseAlignedModelTranslation.x 
+                                                      << ", " << phaseAlignedModelTranslation.y << ", "
+                                                      << phaseAlignedModelTranslation.z << ")" << std::endl;
 
         if (nearestXAxisChanged)
         {
@@ -134,6 +158,7 @@ void XYZAxesComponent::createAxesAndPositionLabelsForCameraPosition()
             std::cerr << "z axis (" << zAxisCenter.x << ", " << zAxisCenter.y << ", " << zAxisCenter.z << ")" << std::endl;
         }
     }
+    */
 
     positionLabels.resize(6, GraphicObject::Ptr());
 
@@ -141,43 +166,59 @@ void XYZAxesComponent::createAxesAndPositionLabelsForCameraPosition()
 
     if (nearestXAxisChanged)
     {
-        String minXAxisText(TRANS("($1,0,0)").replace("$1", String(origin.x - 5)));
+        String minXAxisText(TRANS("($1,$2,$3)").replace("$1", String(phaseAlignedModelTranslation.x - 5))
+                                               .replace("$2", String(phaseAlignedModelTranslation.y))
+                                               .replace("$3", String(phaseAlignedModelTranslation.z)));
         positionLabels[0] = TextureBuilder::createTexture(openGLContext,
                                                           TextureBuilder::createTextImage(minXAxisText, Font(12)),
                                                           imageSize,
-                                                          c4::Matrix4D(c4::Vector3D(-5, imageSize, 0)));
+                                                          c4::Matrix4D(c4::Vector3D(-5, imageSize, 0) + phaseAlignedModelTranslation));
 
-        String maxXAxisText(TRANS("($1,0,0)").replace("$1", String(origin.x + 5)));
+        String maxXAxisText(TRANS("($1,$2,$3)").replace("$1", String(phaseAlignedModelTranslation.x + 5))
+                                               .replace("$2", String(phaseAlignedModelTranslation.y))
+                                               .replace("$3", String(phaseAlignedModelTranslation.z)));
         positionLabels[1] = TextureBuilder::createTexture(openGLContext,
                                                           TextureBuilder::createTextImage(maxXAxisText, Font(12)),
                                                           imageSize,
-                                                          c4::Matrix4D(c4::Vector3D(5, imageSize, 0)));
+                                                          c4::Matrix4D(c4::Vector3D(5, imageSize, 0) + phaseAlignedModelTranslation));
     }
 
     if (nearestYAxisChanged)
     {
+        String minYAxisText(TRANS("($1,$2,$3)").replace("$1", String(phaseAlignedModelTranslation.x))
+                                               .replace("$2", String(phaseAlignedModelTranslation.y - 5))
+                                               .replace("$3", String(phaseAlignedModelTranslation.z)));
         positionLabels[2] = TextureBuilder::createTexture(openGLContext,
-                                                          TextureBuilder::createTextImage(TRANS("(0,-5,0)"), Font(12)),
+                                                          TextureBuilder::createTextImage(minYAxisText, Font(12)),
                                                           imageSize,
-                                                          c4::Matrix4D(c4::Vector3D(imageSize, -5, 0)));
+                                                          c4::Matrix4D(c4::Vector3D(imageSize, -5, 0) + phaseAlignedModelTranslation));
 
+        String maxYAxisText(TRANS("($1,$2,$3)").replace("$1", String(phaseAlignedModelTranslation.x))
+                                               .replace("$2", String(phaseAlignedModelTranslation.y + 5))
+                                               .replace("$3", String(phaseAlignedModelTranslation.z)));
         positionLabels[3] = TextureBuilder::createTexture(openGLContext,
-                                                          TextureBuilder::createTextImage(TRANS("(0,5,0)"), Font(12)),
+                                                          TextureBuilder::createTextImage(maxYAxisText, Font(12)),
                                                           imageSize,
-                                                          c4::Matrix4D(c4::Vector3D(imageSize, 5, 0)));
+                                                          c4::Matrix4D(c4::Vector3D(imageSize, 5, 0) + phaseAlignedModelTranslation));
     }
 
     if (nearestZAxisChanged)
     {
+        String minZAxisText(TRANS("($1,$2,$3)").replace("$1", String(phaseAlignedModelTranslation.x))
+                                               .replace("$2", String(phaseAlignedModelTranslation.y))
+                                               .replace("$3", String(phaseAlignedModelTranslation.z - 5)));
         positionLabels[4] = TextureBuilder::createTexture(openGLContext,
-                                                          TextureBuilder::createTextImage(TRANS("(0,0,-5)"), Font(12)),
+                                                          TextureBuilder::createTextImage(minZAxisText, Font(12)),
                                                           imageSize,
-                                                          c4::Matrix4D(c4::Vector3D(0, imageSize, -5)));
+                                                          c4::Matrix4D(c4::Vector3D(0, imageSize, -5) + phaseAlignedModelTranslation));
 
+        String maxZAxisText(TRANS("($1,$2,$3)").replace("$1", String(phaseAlignedModelTranslation.x))
+                                               .replace("$2", String(phaseAlignedModelTranslation.y))
+                                               .replace("$3", String(phaseAlignedModelTranslation.z + 5)));
         positionLabels[5] = TextureBuilder::createTexture(openGLContext,
-                                                          TextureBuilder::createTextImage(TRANS("(0,0,5)"), Font(12)),
+                                                          TextureBuilder::createTextImage(maxZAxisText, Font(12)),
                                                           imageSize,
-                                                          c4::Matrix4D(c4::Vector3D(0, imageSize, 5)));
+                                                          c4::Matrix4D(c4::Vector3D(0, imageSize, 5) + phaseAlignedModelTranslation));
     }
 }
 
