@@ -53,6 +53,22 @@ void XYZAxesComponent::mouseMagnify(const MouseEvent &event, float scaleFactor)
     openGLContext.triggerRepaint();
 }
 
+void XYZAxesComponent::mouseWheelMove(const MouseEvent &event, const MouseWheelDetails &wheel)
+{
+    //std::cerr << "XYZAxesComponent::mouseWheelMove; wheel (" << wheel.deltaX << ", " << wheel.deltaY << ")" << std::endl;
+
+    c4::Matrix4D translatedViewMatrix(renderingProperties->getViewMatrix());
+
+    translatedViewMatrix.n[0][3] += wheel.deltaX;
+    translatedViewMatrix.n[1][3] += -wheel.deltaY;
+
+    renderingProperties->setViewMatrix(translatedViewMatrix);
+
+    cameraMoved = true;
+
+    openGLContext.triggerRepaint();
+}
+
 void XYZAxesComponent::newOpenGLContextCreated()
 {
     renderingProperties = RenderingProperties::Ptr(new RenderingProperties(getWidth(), getHeight()));

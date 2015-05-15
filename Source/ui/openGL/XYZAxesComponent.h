@@ -17,6 +17,7 @@ public:
     void mouseDown(const MouseEvent& event) override;
     void mouseDrag(const MouseEvent& event) override;
     void mouseMagnify(const MouseEvent &event, float scaleFactor) override;
+    void mouseWheelMove(const MouseEvent &event, const MouseWheelDetails &wheel) override;
 
     void newOpenGLContextCreated();
     void openGLContextClosing();
